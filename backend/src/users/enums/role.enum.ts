@@ -1,0 +1,5 @@
+export enum Role {
+  ADMIN_HSEE = 'ADMIN_HSEE',
+  AUDITEUR = 'AUDITEUR',
+  PILOTE_ACTION = 'PILOTE_ACTION',
+}
