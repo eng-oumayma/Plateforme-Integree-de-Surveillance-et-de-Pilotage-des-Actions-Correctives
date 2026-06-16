@@ -1,3 +1,4 @@
+// src/auth/auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
@@ -6,8 +7,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcryptjs';
 import { MailService } from '../mail/mail.service';
+import { AccountStatus } from '../users/user.entity';
+import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -19,47 +21,45 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
-  // Appelé par LocalStrategy (vérifie email + password)
+  // ── Valider credentials login ──────────────────────
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new UnauthorizedException('Identifiants incorrects');
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) throw new UnauthorizedException('Identifiants incorrects');
-
-    if (!user.isActive) throw new UnauthorizedException('Compte désactivé');
-
-    // ← AJOUTER CETTE LIGNE :
-    if (!user.isEmailConfirmed) {
+    // Compte pas encore activé (password pas défini)
+    if (user.status === AccountStatus.PENDING) {
       throw new UnauthorizedException(
-        'Veuillez confirmer votre email avant de vous connecter',
+        'Veuillez définir votre mot de passe via le lien envoyé par email',
       );
     }
+
+    if (user.status === AccountStatus.INACTIVE) {
+      throw new UnauthorizedException("Compte désactivé, contactez l'admin");
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) throw new UnauthorizedException('Identifiants incorrects');
 
     return user;
   }
 
-  // Génère access_token + refresh_token
+  // ── Générer tokens JWT ─────────────────────────────
   async login(user: any) {
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      site: user.site,
     };
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.config.get('JWT_SECRET'),
-      expiresIn: this.config.get('JWT_EXPIRES_IN'),
-    });
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.config.get('JWT_REFRESH_SECRET'),
-      expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN'),
-    });
-
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      access_token: this.jwtService.sign(payload, {
+        secret: this.config.get('JWT_SECRET'),
+        expiresIn: this.config.get('JWT_EXPIRES_IN'),
+      }),
+      refresh_token: this.jwtService.sign(payload, {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN'),
+      }),
       token_type: 'Bearer',
       user: {
         id: user.id,
@@ -67,70 +67,79 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        site: user.site,
       },
     };
   }
-  // ─── Confirmation email ───────────────────────────────
-  async sendConfirmationEmail(email: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) throw new BadRequestException('Email introuvable');
-    if (user.isEmailConfirmed)
-      throw new BadRequestException('Compte déjà confirmé');
-    // Générer token aléatoire
-    const token = crypto.randomBytes(32).toString('hex');
 
-    // Sauvegarder le token dans la BDD
-    await this.usersService.saveConfirmationToken(user.id, token);
+  // ── Définir password (premier accès) ──────────────
+  async setPassword(token: string, password: string) {
+    const user = await this.usersService.findBySetPasswordToken(token);
+    if (!user) throw new BadRequestException('Lien invalide');
+    if (!user.setPasswordExpires) {
+      throw new BadRequestException('Lien invalide');
+    }
+    if (new Date() > user.setPasswordExpires) {
+      throw new BadRequestException("Lien expiré, contactez l'administrateur");
+    }
 
-    // Envoyer l'email
-    await this.mailService.sendConfirmationEmail(email, token);
-    return { message: 'Email de confirmation envoyé' };
+    await this.usersService.setPassword(user.id, password);
+
+    // Envoyer email de confirmation d'activation
+    await this.mailService.sendAccountActivatedEmail(
+      user.email,
+      user.firstName,
+    );
+
+    return {
+      message:
+        '✅ Mot de passe défini ! Vous pouvez maintenant vous connecter.',
+    };
   }
-  async confirmEmail(token: string) {
-    const user = await this.usersService.findByConfirmationToken(token);
-    if (!user) throw new BadRequestException('Token invalide ou expiré');
 
-    // Activer le compte
-    await this.usersService.confirmUser(user.id);
-    return { message: 'Compte confirmé avec succès' };
-  }
-  // Mot de passe oublié – envoyer le lien
+  // ── Forgot password ────────────────────────────────
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
-
-    // Toujours même message (sécurité – ne pas révéler les emails)
     if (!user) return { message: 'Si cet email existe, un lien a été envoyé' };
 
+    if (user.status === AccountStatus.PENDING) {
+      throw new BadRequestException(
+        "Votre compte n'est pas encore activé. Vérifiez vos emails.",
+      );
+    }
+
     const token = crypto.randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 3600000); // +1 heure
+    const expires = new Date(Date.now() + 3600000); // 1h
 
     await this.usersService.saveResetToken(user.id, token, expires);
     await this.mailService.sendResetPasswordEmail(email, token);
 
     return { message: 'Si cet email existe, un lien a été envoyé' };
   }
-  // Réinitialiser le mot de passe avec le token
+
+  // ── Reset password ─────────────────────────────────
   async resetPassword(token: string, newPassword: string) {
     const user = await this.usersService.findByResetToken(token);
     if (!user) throw new BadRequestException('Token invalide');
-
-    // Vérifier l'expiration
-    if (!user.resetPasswordExpires || new Date() > user.resetPasswordExpires) {
+    if (!user.resetPasswordExpires) {
+      throw new BadRequestException('Token invalide');
+    }
+    if (new Date() > user.resetPasswordExpires) {
       throw new BadRequestException('Token expiré, refaites la demande');
     }
 
-    // Mettre à jour le password (bcrypt dans la méthode)
     await this.usersService.updatePassword(user.id, newPassword);
     return { message: '✅ Mot de passe réinitialisé avec succès !' };
   }
-  // Renouveler l'access_token depuis le refresh_token
+
+  // ── Refresh token ──────────────────────────────────
   async refreshToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
         secret: this.config.get('JWT_REFRESH_SECRET'),
       });
       const user = await this.usersService.findById(payload.sub);
-      if (!user || !user.isActive) throw new UnauthorizedException();
+      if (!user) throw new UnauthorizedException();
       return this.login(user);
     } catch {
       throw new UnauthorizedException('Refresh token invalide ou expiré');

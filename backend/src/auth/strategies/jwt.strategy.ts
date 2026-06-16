@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/users.service';
+import { AccountStatus } from 'src/users/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -27,8 +28,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     site: string;
   }) {
     const user = await this.usersService.findById(payload.sub);
-    if (!user || !user.isActive)
+    if (!user || user.status !== AccountStatus.ACTIVE) {
       throw new UnauthorizedException('Token invalide');
+    }
+
     return {
       userId: user.id,
       email: user.email,

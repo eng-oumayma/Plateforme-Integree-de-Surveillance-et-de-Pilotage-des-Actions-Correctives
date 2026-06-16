@@ -1,71 +1,95 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+// src/users/users.service.ts
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { User, AccountStatus } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserResponse } from './types/user-response.type';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly repo: Repository<User>,
   ) {}
 
+  // ── Créer user par l'admin ─────────────────────────
+  async create(
+    dto: CreateUserDto,
+  ): Promise<{ user: Partial<User>; token: string }> {
+    const exists = await this.repo.findOne({ where: { email: dto.email } });
+    if (exists) throw new ConflictException('Cet email est déjà utilisé');
+
+    // Générer token pour définir le password (expire dans 48h)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 48 * 3600000);
+
+    const user = this.repo.create({
+      ...dto,
+      status: AccountStatus.PENDING,
+      setPasswordToken: token,
+      setPasswordExpires: expires,
+    });
+
+    const saved = await this.repo.save(user);
+    const { password, setPasswordToken, resetPasswordToken, ...result } = saved;
+    return { user: result, token };
+  }
+
+  // ── Trouver par email ──────────────────────────────
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository
+    return this.repo
       .createQueryBuilder('user')
-      .addSelect('user.password') // password exclu par défaut, on le force ici
-      .where('user.email = :email AND user.isActive = true', { email })
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
       .getOne();
   }
 
+  // ── Trouver par ID ─────────────────────────────────
   async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id, isActive: true } });
-  }
-  async save(user: Partial<User>): Promise<User> {
-    return this.usersRepository.save(user);
-  }
-  // Ajouter ces méthodes dans UsersService
-
-  // Sauvegarder le token de confirmation
-  async saveConfirmationToken(id: string, token: string): Promise<void> {
-    await this.usersRepository.update(id, { confirmationToken: token });
+    return this.repo.findOne({ where: { id } });
   }
 
-  // Trouver user par token de confirmation
-  async findByConfirmationToken(token: string): Promise<User | null> {
-    return this.usersRepository
+  // ── Trouver par setPasswordToken ───────────────────
+  async findBySetPasswordToken(token: string): Promise<User | null> {
+    return this.repo
       .createQueryBuilder('user')
-      .addSelect('user.confirmationToken')
-      .where('user.confirmationToken = :token', { token })
+      .addSelect('user.setPasswordToken')
+      .addSelect('user.setPasswordExpires')
+      .where('user.setPasswordToken = :token', { token })
       .getOne();
   }
 
-  // Confirmer le compte
-  async confirmUser(id: string): Promise<void> {
-    await this.usersRepository.update(id, {
-      isEmailConfirmed: true,
-      confirmationToken: null,
+  // ── Définir le password (première fois) ───────────
+  async setPassword(id: string, password: string): Promise<void> {
+    const hashed = await bcrypt.hash(password, 12);
+    await this.repo.update(id, {
+      password: hashed,
+      status: AccountStatus.ACTIVE,
+      setPasswordToken: null,
+      setPasswordExpires: null,
     });
   }
 
-  // Sauvegarder le token de reset
+  // ── Reset password token ───────────────────────────
   async saveResetToken(
     id: string,
     token: string,
     expires: Date,
   ): Promise<void> {
-    await this.usersRepository.update(id, {
+    await this.repo.update(id, {
       resetPasswordToken: token,
       resetPasswordExpires: expires,
     });
   }
 
-  // Trouver user par token de reset
   async findByResetToken(token: string): Promise<User | null> {
-    return this.usersRepository
+    return this.repo
       .createQueryBuilder('user')
       .addSelect('user.resetPasswordToken')
       .addSelect('user.resetPasswordExpires')
@@ -73,31 +97,17 @@ export class UsersService {
       .getOne();
   }
 
-  // Mettre à jour le mot de passe
   async updatePassword(id: string, newPassword: string): Promise<void> {
     const hashed = await bcrypt.hash(newPassword, 12);
-    await this.usersRepository.update(id, {
+    await this.repo.update(id, {
       password: hashed,
       resetPasswordToken: null,
       resetPasswordExpires: null,
     });
   }
 
-  async create(dto: CreateUserDto): Promise<UserResponse> {
-    const exists = await this.usersRepository.findOne({
-      where: { email: dto.email },
-    });
-
-    if (exists) {
-      throw new ConflictException('Cet email est déjà utilisé');
-    }
-
-    const user = this.usersRepository.create(dto);
-
-    const saved = await this.usersRepository.save(user);
-
-    const { password, ...result } = saved;
-
-    return result;
+  // ── Liste tous les users (admin) ───────────────────
+  async findAll(): Promise<User[]> {
+    return this.repo.find({ order: { createdAt: 'DESC' } });
   }
 }

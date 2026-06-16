@@ -1,3 +1,4 @@
+// src/users/user.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,7 +8,12 @@ import {
   BeforeInsert,
 } from 'typeorm';
 import { Role } from './enums/role.enum';
-import * as bcrypt from 'bcryptjs';
+
+export enum AccountStatus {
+  PENDING = 'PENDING', // compte créé, password pas encore défini
+  ACTIVE = 'ACTIVE', // password défini, peut se connecter
+  INACTIVE = 'INACTIVE', // désactivé par admin
+}
 
 @Entity('users')
 export class User {
@@ -23,36 +29,37 @@ export class User {
   @Column({ unique: true })
   email!: string;
 
-  @Column({ select: false }) // jamais renvoyé dans les réponses API
-  password!: string;
+  @Column({ nullable: true, select: false })
+  password!: string; // null jusqu'à ce que le user définit son password
+
   @Column({ type: 'enum', enum: Role, default: Role.AUDITEUR })
   role!: Role;
 
-  @Column({ default: true })
-  isActive!: boolean;
+  @Column({ default: 'Menzel Hayet' })
+  site!: string;
 
-  @CreateDateColumn()
-  createdAt!: Date;
+  @Column({
+    type: 'enum',
+    enum: AccountStatus,
+    default: AccountStatus.PENDING,
+  })
+  status!: AccountStatus; // PENDING → ACTIVE après définition password
 
-  @UpdateDateColumn()
-  updatedAt!: Date;
-  @BeforeInsert()
-  async hashPassword() {
-    if (this.password) {
-      this.password = await bcrypt.hash(this.password, 12);
-    }
-  }
-  // Ajouter ces colonnes dans user.entity.ts
+  // Token pour définir le password (envoyé par email)
   @Column({
     type: 'varchar',
     nullable: true,
     select: false,
   })
-  confirmationToken!: string | null;
+  setPasswordToken!: string | null;
 
-  @Column({ default: false })
-  isEmailConfirmed!: boolean;
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+  })
+  setPasswordExpires!: Date | null;
 
+  // Token pour reset password (oublié)
   @Column({
     type: 'varchar',
     nullable: true,
@@ -65,4 +72,10 @@ export class User {
     nullable: true,
   })
   resetPasswordExpires!: Date | null;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

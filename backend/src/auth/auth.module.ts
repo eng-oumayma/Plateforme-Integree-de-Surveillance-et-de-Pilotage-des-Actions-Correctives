@@ -8,7 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../mail/mail.module';
-
+import { RolesGuard } from 'src/common/guards/roles.guard';
 @Module({
   imports: [
     UsersModule,
@@ -18,7 +18,7 @@ import { MailModule } from '../mail/mail.module';
     MailModule, // config dynamique dans le service
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, RolesGuard],
   exports: [AuthService],
 })
 export class AuthModule {}

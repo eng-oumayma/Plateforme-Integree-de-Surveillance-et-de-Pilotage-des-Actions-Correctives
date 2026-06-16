@@ -1,9 +1,9 @@
+// src/auth/auth.controller.ts
 import {
   Controller,
   Post,
   Body,
   Get,
-  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -22,29 +22,13 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  // POST /api/auth/refresh
-  @Post('refresh')
-  refresh(@Body('refresh_token') token: string) {
-    return this.authService.refreshToken(token);
-  }
-
-  // GET /api/auth/me
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  getProfile(@Request() req) {
-    return req.user;
-  }
-
-  // POST /api/auth/send-confirmation
-  @Post('send-confirmation')
-  sendConfirmation(@Body('email') email: string) {
-    return this.authService.sendConfirmationEmail(email);
-  }
-
-  // GET /api/auth/confirm?token=xxx
-  @Get('confirm')
-  confirmEmail(@Query('token') token: string) {
-    return this.authService.confirmEmail(token);
+  // POST /api/auth/set-password  ← user définit son password (1er accès)
+  @Post('set-password')
+  setPassword(
+    @Body('token') token: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.setPassword(token, password);
   }
 
   // POST /api/auth/forgot-password
@@ -60,5 +44,18 @@ export class AuthController {
     @Body('newPassword') newPassword: string,
   ) {
     return this.authService.resetPassword(token, newPassword);
+  }
+
+  // POST /api/auth/refresh
+  @Post('refresh')
+  refresh(@Body('refresh_token') token: string) {
+    return this.authService.refreshToken(token);
+  }
+
+  // GET /api/auth/me
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@Request() req) {
+    return req.user;
   }
 }
