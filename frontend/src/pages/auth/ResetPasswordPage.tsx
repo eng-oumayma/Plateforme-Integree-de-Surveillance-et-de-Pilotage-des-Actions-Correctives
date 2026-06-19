@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
     setError('');
     setLoading(true);
     try {
-      await authService.resetPassword(token, password);
+      await authService.resetPassword(token, password,confirm);
       setDone(true);
     } catch (err: unknown) {
       const status = (err as { response?: { status: number } })?.response?.status;
