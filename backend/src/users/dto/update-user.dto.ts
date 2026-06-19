@@ -2,6 +2,7 @@
 import { IsEnum, IsString, IsOptional } from 'class-validator';
 import { Role } from '../enums/role.enum';
 import { AccountStatus } from '../user.entity';
+import { Department } from '../enums/department.enum';
 
 export class UpdateUserDto {
   @IsString()
@@ -19,4 +20,7 @@ export class UpdateUserDto {
   @IsEnum(AccountStatus)
   @IsOptional()
   status?: AccountStatus;
+  @IsEnum(Department)
+  @IsOptional()
+  department?: Department;
 }

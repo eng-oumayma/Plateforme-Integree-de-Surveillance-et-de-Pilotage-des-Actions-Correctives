@@ -8,6 +8,7 @@ import {
   BeforeInsert,
 } from 'typeorm';
 import { Role } from './enums/role.enum';
+import { Department } from './enums/department.enum';
 
 export enum AccountStatus {
   PENDING = 'PENDING', // compte créé, password pas encore défini
@@ -35,8 +36,9 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.AUDITEUR })
   role!: Role;
 
-  @Column({ default: 'Menzel Hayet' })
-  department!: string;
+  // ← AJOUTER CETTE COLONNE
+  @Column({ type: 'enum', enum: Department, nullable: true })
+  department!: Department;
 
   @Column({
     type: 'enum',
