@@ -106,6 +106,10 @@ export class UsersService {
     });
   }
 
+
+
+  
+
   // ── Liste tous les users (admin) ───────────────────
   async findAll(): Promise<User[]> {
     return this.repo.find({ order: { createdAt: 'DESC' } });
