@@ -109,7 +109,6 @@ export class UsersService {
     });
   }
 
-  // ── GET tous les users ─────────────────────────────
   async findAll(): Promise<User[]> {
     return this.repo.find({
       order: { createdAt: 'DESC' },
