@@ -210,8 +210,8 @@ const warningTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const login = async (email: string, password: string) => {
     const { tokens, user: me } = await authService.login({ email, password });
 
-    localStorage.setItem('access_token', tokens.accessToken);
-    localStorage.setItem('refresh_token', tokens.refreshToken);
+    localStorage.setItem('access_token', tokens.access_token);
+    localStorage.setItem('refresh_token', tokens.refresh_token);
 
     setUser(me);
     resetInactivityTimers();
