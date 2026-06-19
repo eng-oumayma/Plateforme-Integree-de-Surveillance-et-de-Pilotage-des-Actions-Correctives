@@ -10,6 +10,8 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { SetPasswordDto } from './dto/set-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -22,13 +24,10 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  // POST /api/auth/set-password  ← user définit son password (1er accès)
+  // POST /api/auth/set-password
   @Post('set-password')
-  setPassword(
-    @Body('token') token: string,
-    @Body('password') password: string,
-  ) {
-    return this.authService.setPassword(token, password);
+  setPassword(@Body() dto: SetPasswordDto) {
+    return this.authService.setPassword(dto.token, dto.password);
   }
 
   // POST /api/auth/forgot-password
@@ -39,11 +38,8 @@ export class AuthController {
 
   // POST /api/auth/reset-password
   @Post('reset-password')
-  resetPassword(
-    @Body('token') token: string,
-    @Body('newPassword') newPassword: string,
-  ) {
-    return this.authService.resetPassword(token, newPassword);
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 
   // POST /api/auth/refresh

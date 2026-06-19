@@ -6,6 +6,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Role } from '../enums/role.enum';
+import { Department } from '../enums/department.enum';
 
 export class CreateUserDto {
   @IsString()
@@ -17,6 +18,8 @@ export class CreateUserDto {
   @IsEmail()
   email!: string;
 
+  @IsEnum(Department, { message: 'Département invalide' })
+  department!: Department;
   @IsEnum(Role)
   @IsOptional()
   role?: Role;
