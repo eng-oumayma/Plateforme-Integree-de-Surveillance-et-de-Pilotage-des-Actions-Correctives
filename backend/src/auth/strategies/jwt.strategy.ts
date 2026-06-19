@@ -20,12 +20,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   // Appelé automatiquement par JwtAuthGuard APRÈS vérification de la signature
-  // payload = contenu décodé du JWT { sub, email, role, site }
+  // payload = contenu décodé du JWT { sub, email, role, department }
   async validate(payload: {
     sub: string;
     email: string;
     role: string;
-    site: string;
+    department: string;
   }) {
     const user = await this.usersService.findById(payload.sub);
     if (!user || user.status !== AccountStatus.ACTIVE) {

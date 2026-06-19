@@ -36,7 +36,7 @@ export class User {
   role!: Role;
 
   @Column({ default: 'Menzel Hayet' })
-  site!: string;
+  department!: string;
 
   @Column({
     type: 'enum',
