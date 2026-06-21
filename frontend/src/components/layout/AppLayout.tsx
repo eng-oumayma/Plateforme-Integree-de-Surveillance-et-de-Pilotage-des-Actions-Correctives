@@ -25,25 +25,25 @@ const DRAWER_WIDTH = 248;
 const ROLE_LABELS = {
   ADMIN_HSEE: 'Admin HSEE',
   AUDITEUR: 'Auditeur',
-  PILOTE: "Pilote d'Action",
+  PILOTE_ACTION: "Pilote d'Action",
 };
 
 const ROLE_COLORS = {
   ADMIN_HSEE: 'primary',
   AUDITEUR: 'success',
-  PILOTE: 'warning',
+  PILOTE_ACTION: 'warning',
 };
 
 // Store icon components (not JSX) to avoid rendering outside React tree
 const NAV_ITEMS = [
-  { label: 'Tableau de bord',    Icon: DashboardIcon,    path: '/dashboard',      roles: ['ADMIN_HSEE', 'AUDITEUR', 'PILOTE'] },
+  { label: 'Tableau de bord',    Icon: DashboardIcon,    path: '/dashboard',      roles: ['ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION'] },
   { label: 'Utilisateurs',       Icon: PeopleIcon,        path: '/admin/users',    roles: ['ADMIN_HSEE'] },
   { label: 'Inspections',        Icon: AssignmentIcon,    path: '/inspections',    roles: ['ADMIN_HSEE', 'AUDITEUR'] },
   { label: 'Checklists',         Icon: ChecklistIcon,     path: '/checklists',     roles: ['ADMIN_HSEE', 'AUDITEUR'] },
   { label: 'Anomalies',          Icon: WarningAmberIcon,  path: '/anomalies',      roles: ['ADMIN_HSEE', 'AUDITEUR'] },
-  { label: 'Actions correctives',Icon: BuildIcon,         path: '/actions',        roles: ['ADMIN_HSEE', 'AUDITEUR', 'PILOTE'] },
+  { label: 'Actions correctives',Icon: BuildIcon,         path: '/actions',        roles: ['ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION'] },
   { label: 'KPI / Rapports',     Icon: BarChartIcon,      path: '/dashboard/kpi',  roles: ['ADMIN_HSEE'] },
-  { label: 'Notifications',      Icon: NotificationsIcon, path: '/notifications',  roles: ['ADMIN_HSEE', 'AUDITEUR', 'PILOTE'] },
+  { label: 'Notifications',      Icon: NotificationsIcon, path: '/notifications',  roles: ['ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION'] },
   { label: 'Calendrier',         Icon: CalendarMonthIcon, path: '/calendar',       roles: ['ADMIN_HSEE', 'AUDITEUR'] },
 ];
 

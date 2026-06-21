@@ -22,11 +22,25 @@ export const userService = {
     return data;
   },
 
-  async toggleActive(id: string, isActive: boolean): Promise<User> {
-    const { data } = await api.patch(`/users/${id}/status`, { isActive });
+   
+  // Backend : DELETE /users/:id
+  async remove(id) {
+    const { data } = await api.delete(`/users/${id}`);
     return data;
   },
 
+  // async toggleActive(id: string, isActive: boolean): Promise<User> {
+  //   const { data } = await api.patch(`/users/${id}/status`, { isActive });
+  //   return data;
+  // },
+
+    // Backend attend : PATCH /users/:id/status  { status: 'ACTIVE' | 'INACTIVE' }
+  async toggleActive(id, makeActive) {
+    const { data } = await api.patch(`/users/${id}/status`, {
+      status: makeActive ? 'ACTIVE' : 'INACTIVE',
+    });
+    return data;
+  },
   async updateAvatar(id: string, file: File): Promise<User> {
     const form = new FormData();
     form.append('avatar', file);

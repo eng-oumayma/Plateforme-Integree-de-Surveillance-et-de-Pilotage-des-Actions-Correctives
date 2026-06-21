@@ -118,6 +118,7 @@ export class UsersService {
         lastName: true,
         email: true,
         role: true,
+        department: true,
         status: true,
         createdAt: true,
       },
