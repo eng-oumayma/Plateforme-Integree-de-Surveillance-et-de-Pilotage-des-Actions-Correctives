@@ -19,18 +19,19 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { userService } from '../../services/userService';
+import type { UserRole } from '../../types';
 
 const ROLES = [
   { value: 'ADMIN_HSEE',    label: 'Admin HSEE',       desc: 'Gestion complète de la plateforme' },
   { value: 'AUDITEUR', label: 'Auditeur',          desc: 'Réalise les inspections et checklists' },
-  { value: 'PILOTE',   label: "Pilote d'Action",   desc: 'Suit et met à jour les actions correctives' },
+  { value: 'PILOTE_ACTION',   label: "Pilote d'Action",   desc: 'Suit et met à jour les actions correctives' },
 ];
 
 const DEPARTMENTS = [
   'HSE', 'Production', 'Maintenance', 'Qualité', 'Logistique', 'RH', 'Direction',
 ];
 
-const ROLE_COLORS = { ADMIN_HSEE: 'primary', AUDITEUR: 'success', PILOTE: 'warning' };
+const ROLE_COLORS = { ADMIN_HSEE: 'primary', AUDITEUR: 'success', PILOTE_ACTION: 'warning' };
 
 const defaultForm = { firstName: '', lastName: '', email: '', role: '', department: '' };
 const defaultErrors = { firstName: '', lastName: '', email: '', role: '', department: '' };
@@ -71,12 +72,22 @@ export default function CreateUserPage() {
     setApiError('');
     if (!validate()) return;
     setSubmitting(true);
+    // 🔥 AJOUTE CE LOG ICI :
+  console.log("=== PAYLOAD ENVOYÉ AU BACKEND ===", {
+    firstName: form.firstName.trim(),
+    lastName:  form.lastName.trim(),
+    email:     form.email.trim().toLowerCase(),
+    role:      form.role, // 👈 Regarde ce qui s'affiche ici dans ta console !
+    department: form.department,
+  });
+
+
     try {
       await userService.create({
         firstName: form.firstName.trim(),
         lastName:  form.lastName.trim(),
         email:     form.email.trim().toLowerCase(),
-        role:      form.role,
+        role:      form.role as UserRole,
         department: form.department,
       });
       setCreatedEmail(form.email.trim().toLowerCase());
@@ -226,6 +237,7 @@ export default function CreateUserPage() {
                 value={form.role}
                 label="Rôle"
                 onChange={(e) => set('role', e.target.value)}
+                renderValue={(selected) => ROLES.find(r => r.value === selected)?.label || ''}
               >
                 {ROLES.map((r) => (
                   <MenuItem key={r.value} value={r.value}>

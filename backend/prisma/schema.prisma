@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+
+
+
+
+enum Domaine {
+  Plant
+  Magasin
+  Sanitaires
+  Cantine
+  Chimique
+  Locaux_techniques
+  Dechets
+  Transport
+  Infirmerie
+  Recycleurs
+  Incendie
+}
+
+enum InspectionStatus {
+  EN_COURS
+  TERMINEE
+  VALIDEE
+  ANNULEE
+}
+
+model Inspection {
+  id            String            @id @default(uuid())
+  domaine       Domaine
+  site          String
+  statut        InspectionStatus  @default(EN_COURS)
+  datePrevue    DateTime
+  dateRealise   DateTime?
+  latitude      Float?
+  longitude     Float?
+  timestamp     DateTime          @default(now())
+  auditeurId    String
+  auditeur      Users             @relation(fields: [auditeurId], references: [id])
+  checklistId   String?
+  checklist     ChecklistTemplate? @relation(fields: [checklistId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@map("inspections")
+}
+
+model ChecklistTemplate {
+  id          String       @id @default(uuid())
+  domaine     Domaine      @unique
+  titre       String
+  inspections Inspection[]
+  items       ChecklistItem[]
+  createdAt   DateTime     @default(now())
+
+  @@map("checklist_templates")
+}
+
+model ChecklistItem {
+  id          String            @id @default(uuid())
+  templateId  String
+  template    ChecklistTemplate @relation(fields: [templateId], references: [id])
+  ordre       Int
+  question    String
+  type        String            @default("OUI_NON") // OUI_NON | TEXTE | NOTE
+  requis      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+
+  @@map("checklist_items")
+}
+

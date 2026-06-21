@@ -59,8 +59,8 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
-  // PUT /api/users/:id ← modifier nom, rôle
-  @Put(':id')
+  // PATCH /api/users/:id ← modifier nom, rôle
+  @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
   }

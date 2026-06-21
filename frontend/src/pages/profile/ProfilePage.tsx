@@ -14,8 +14,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
 
-const ROLE_LABELS = { ADMIN_HSEE: 'Admin HSEE', AUDITEUR: 'Auditeur', PILOTE: "Pilote d'Action" };
-const ROLE_COLORS = { ADMIN_HSEE: 'primary', AUDITEUR: 'success', PILOTE: 'warning' } as const;
+const ROLE_LABELS = { ADMIN_HSEE: 'Admin HSEE', AUDITEUR: 'Auditeur', PILOTE_ACTION: "Pilote d'Action" };
+const ROLE_COLORS = { ADMIN_HSEE: 'primary', AUDITEUR: 'success', PILOTE_ACTION: 'warning' } as const;
 
 const PASSWORD_RULES = [
   { label: '8 caractères minimum', test: (p: string) => p.length >= 8 },
