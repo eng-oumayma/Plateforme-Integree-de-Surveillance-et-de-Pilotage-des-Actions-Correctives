@@ -12,6 +12,8 @@ import DashboardPage from './pages/DashboardPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import CreateUserPage from './pages/admin/CreateUserPage';
 import SetPasswordPage from './pages/auth/SetPasswordPage';
+import InspectionsListPage from './pages/inspections/InspectionsListPage';
+import CreateInspectionPage from './pages/inspections/CreateInspectionPage';
 const theme = createTheme({
   palette: {
     primary: { main: '#1565C0' },
@@ -76,7 +78,8 @@ export default function App() {
                 }
               />
               {/* Future epics — placeholder */}
-              <Route path="/inspections" element={<DashboardPage />} />
+              <Route path="/inspections" element={<InspectionsListPage />} />
+              <Route path="/inspections/new" element={<CreateInspectionPage />} />
               <Route path="/checklists" element={<DashboardPage />} />
               <Route path="/anomalies" element={<DashboardPage />} />
               <Route path="/actions" element={<DashboardPage />} />

@@ -1,24 +1,42 @@
-import { IsEnum, IsString, IsDateString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import {
+  IsEnum,
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsUUID,
+} from 'class-validator';
 import { Domaine } from '../../common/enums/domaine.enum';
 
 export class CreateInspectionDto {
   @IsEnum(Domaine, { message: 'Domaine invalide' })
   domaine: Domaine;
 
+
+
+   // auditeurId envoyé par le frontend (Admin choisit l'auditeur)
+  @IsOptional()
+  @IsUUID('4', { message: 'auditeurId doit être un UUID valide' })
+  auditeurId?: string;
+
   @IsString()
+  @IsNotEmpty({ message: 'Le site est requis' })
   site: string;
 
-  @IsDateString()
+  @IsDateString({}, { message: 'Format de date invalide' })
   datePrevue: string;
 
-  /** Latitude fournie par navigator.geolocation côté client */
+  /** Latitude fournie par le navigateur (optionnel) */
   @IsOptional()
   @IsNumber()
   @Min(-90)
   @Max(90)
   latitude?: number;
 
-  /** Longitude fournie par navigator.geolocation côté client */
+  /** Longitude fournie par le navigateur (optionnel) */
   @IsOptional()
   @IsNumber()
   @Min(-180)

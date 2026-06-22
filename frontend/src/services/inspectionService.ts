@@ -1,23 +1,33 @@
-import api from './api';
+import api from "../api/api";
 
 export const inspectionService = {
+  // POST /inspections — créer une inspection
   async create(payload) {
     const { data } = await api.post('/inspections', payload);
     return data;
   },
 
-  async getAll(params) {
+  // GET /inspections?domaine=&site=&statut=&dateFrom=&dateTo=
+  async getAll(params?) {
     const { data } = await api.get('/inspections', { params });
     return data;
   },
 
-  async getById(id) {
+  // GET /inspections/:id
+  async getById(id:string) {
     const { data } = await api.get(`/inspections/${id}`);
     return data;
   },
 
-  async updateStatut(id, statut) {
+  // PATCH /inspections/:id/statut  { statut: 'TERMINEE' | 'VALIDEE' | 'ANNULEE' }
+  async updateStatut(id:string, statut) {
     const { data } = await api.patch(`/inspections/${id}/statut`, { statut });
+    return data;
+  },
+
+  // DELETE /inspections/:id
+  async remove(id:string) {
+    const { data } = await api.delete(`/inspections/${id}`);
     return data;
   },
 };
