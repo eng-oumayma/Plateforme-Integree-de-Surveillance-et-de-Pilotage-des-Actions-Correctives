@@ -1,66 +1,15 @@
-// ── À ajouter dans prisma/schema.prisma ────────────────────────────────────
-//
-// enum Domaine {
-//   Plant
-//   Magasin
-//   Sanitaires
-//   Cantine
-//   Chimique
-//   Locaux_techniques
-//   Dechets
-//   Transport
-//   Infirmerie
-//   Recycleurs
-//   Incendie
-// }
-//
-// enum InspectionStatus {
-//   EN_COURS
-//   TERMINEE
-//   VALIDEE
-//   ANNULEE
-// }
-//
-// model Inspection {
-//   id            String            @id @default(uuid())
-//   domaine       Domaine
-//   site          String
-//   statut        InspectionStatus  @default(EN_COURS)
-//   datePrevue    DateTime
-//   dateRealise   DateTime?
-//   latitude      Float?
-//   longitude     Float?
-//   timestamp     DateTime          @default(now())   // horodatage serveur
-//   auditeurId    String
-//   auditeur      User              @relation(fields: [auditeurId], references: [id])
-//   checklistId   String?
-//   checklist     ChecklistTemplate? @relation(fields: [checklistId], references: [id])
-//   createdAt     DateTime          @default(now())
-//   updatedAt     DateTime          @updatedAt
-// }
-//
-// model ChecklistTemplate {
-//   id          String       @id @default(uuid())
-//   domaine     Domaine      @unique
-//   titre       String
-//   inspections Inspection[]
-//   items       ChecklistItem[]
-//   createdAt   DateTime     @default(now())
-// }
-
-// ── Fichier TypeScript entity (si vous utilisez TypeORM au lieu de Prisma) ──
 import {
-  Entity, PrimaryGeneratedColumn, Column,
-  ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Domaine } from '../common/enums/domaine.enum';
-
-export enum InspectionStatus {
-  EN_COURS  = 'EN_COURS',
-  TERMINEE  = 'TERMINEE',
-  VALIDEE   = 'VALIDEE',
-  ANNULEE   = 'ANNULEE',
-}
+import { InspectionStatus } from '../common/enums/Inspection-status.enum';
+import { User } from '../users/user.entity';
 
 @Entity('inspections')
 export class Inspection {
@@ -73,7 +22,11 @@ export class Inspection {
   @Column()
   site: string;
 
-  @Column({ type: 'enum', enum: InspectionStatus, default: InspectionStatus.EN_COURS })
+  @Column({
+    type: 'enum',
+    enum: InspectionStatus,
+    default: InspectionStatus.EN_COURS,
+  })
   statut: InspectionStatus;
 
   @Column({ type: 'timestamp' })
@@ -82,23 +35,25 @@ export class Inspection {
   @Column({ type: 'timestamp', nullable: true })
   dateRealise: Date | null;
 
-  /** Latitude capturée côté client (navigator.geolocation) */
+  /** Latitude capturée par navigator.geolocation côté client */
   @Column({ type: 'float', nullable: true })
   latitude: number | null;
 
-  /** Longitude capturée côté client (navigator.geolocation) */
+  /** Longitude capturée par navigator.geolocation côté client */
   @Column({ type: 'float', nullable: true })
   longitude: number | null;
 
-  /** Horodatage serveur — non falsifiable */
+  /** Horodatage serveur — injecté à la création, non falsifiable */
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   timestamp: Date;
 
+  /** FK vers l'auditeur qui a créé l'inspection */
   @Column()
   auditeurId: string;
 
-  @Column({ nullable: true })
-  checklistId: string | null;
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'auditeurId' })
+  auditeur: User;
 
   @CreateDateColumn()
   createdAt: Date;

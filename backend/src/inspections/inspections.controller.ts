@@ -1,71 +1,109 @@
-// import {
-//   Controller, Post, Get, Patch, Body, Param,
-//   Query, UseGuards, Request,
-// } from '@nestjs/common';
-// import { InspectionsService } from './inspections.service';
-// import { CreateInspectionDto } from './dto/create-inspection.dto';
-// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-// import { RolesGuard } from '../auth/guards/roles.guard';
-// import { Roles } from '../auth/decorators/roles.decorator';
-// import { Domaine } from '../common/enums/domaine.enum';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import { InspectionsService } from './inspections.service';
+import { CreateInspectionDto } from './dto/create-inspection.dto';
+import { UpdateInspectionDto } from './dto/Update-inspection.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Domaine } from '../common/enums/domaine.enum';
+import { InspectionStatus } from '../common/enums/Inspection-status.enum';
 
-// @Controller('inspections')
-// @UseGuards(JwtAuthGuard, RolesGuard)
-// export class InspectionsController {
-//   constructor(private readonly inspectionsService: InspectionsService) {}
+@Controller('inspections')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class InspectionsController {
+  constructor(private readonly inspectionsService: InspectionsService) {}
 
-//   /**
-//    * POST /inspections
-//    * Auditeur crée une inspection — le timestamp est injecté côté serveur.
-//    */
-//   @Post()
-//   @Roles('ADMIN', 'AUDITEUR', 'PILOTE_ACTION')
-//   create(@Body() dto: CreateInspectionDto, @Request() req) {
-//     return this.inspectionsService.create(dto, req.user.sub);
-//   }
+  /**
+   * POST /inspections
+   * L'auditeur crée une inspection.
+   * Le timestamp est injecté côté serveur (non falsifiable).
+   */
+  // @Post()
+  // @Roles('ADMIN_HSEE', 'AUDITEUR')
+  // create(@Body() dto: CreateInspectionDto, @Request() req) {
+  //   return this.inspectionsService.create(dto, req.user.sub);
+  // }
+  @Post()
+@Roles('ADMIN_HSEE', 'AUDITEUR')
+create(@Body() dto: CreateInspectionDto, @Request() req) {
+  return this.inspectionsService.create(
+    dto,
+    req.user.sub,   // ID du connecté
+    req.user.role,  // rôle du connecté
+  );
+}
 
-//   /**
-//    * GET /inspections
-//    * - Admin voit toutes les inspections
-//    * - Auditeur voit seulement les siennes
-//    */
-//   @Get()
-//   @Roles('ADMIN', 'AUDITEUR', 'PILOTE_ACTION')
-//   findAll(
-//     @Request() req,
-//     @Query('domaine') domaine?: Domaine,
-//     @Query('site') site?: string,
-//     @Query('statut') statut?: string,
-//     @Query('dateFrom') dateFrom?: string,
-//     @Query('dateTo') dateTo?: string,
-//   ) {
-//     const isAdmin = req.user.role === 'ADMIN';
-//     return this.inspectionsService.findAll({
-//       auditeurId: isAdmin ? undefined : req.user.sub,
-//       domaine,
-//       site,
-//       statut,
-//       dateFrom,
-//       dateTo,
-//     });
-//   }
+  /**
+   * GET /inspections
+   * Admin → toutes les inspections
+   * Auditeur → uniquement les siennes
+   */
+  @Get()
+  @Roles('ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION')
+  findAll(
+    @Request() req,
+    @Query('domaine') domaine?: Domaine,
+    @Query('site') site?: string,
+    @Query('statut') statut?: InspectionStatus,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    const isAdmin = req.user.role === 'ADMIN_HSEE';
+    return this.inspectionsService.findAll({
+      auditeurId: isAdmin ? undefined : req.user.sub,
+      domaine,
+      site,
+      statut,
+      dateFrom,
+      dateTo,
+    });
+  }
 
-//   /**
-//    * GET /inspections/:id
-//    */
-//   @Get(':id')
-//   @Roles('ADMIN', 'AUDITEUR', 'PILOTE_ACTION')
-//   findOne(@Param('id') id: string) {
-//     return this.inspectionsService.findOne(id);
-//   }
+  /**
+   * GET /inspections/:id
+   */
+  @Get(':id')
+  @Roles('ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION')
+  findOne(@Param('id') id: string) {
+    return this.inspectionsService.findOne(id);
+  }
 
-//   /**
-//    * PATCH /inspections/:id/statut
-//    * Mettre à jour le statut (TERMINEE, VALIDEE, ANNULEE)
-//    */
-//   @Patch(':id/statut')
-//   @Roles('ADMIN', 'AUDITEUR', 'PILOTE_ACTION')
-//   updateStatut(@Param('id') id: string, @Body('statut') statut: string) {
-//     return this.inspectionsService.updateStatut(id, statut);
-//   }
-// }
+  /**
+   * PATCH /inspections/:id/statut
+   * Mettre à jour le statut (TERMINEE, VALIDEE, ANNULEE)
+   */
+  @Patch(':id/statut')
+  @Roles('ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION')
+  updateStatut(
+    @Param('id') id: string,
+    @Body() dto: UpdateInspectionDto,
+    @Request() req,
+  ) {
+    return this.inspectionsService.updateStatut(
+      id,
+      dto,
+      req.user.sub,
+      req.user.role,
+    );
+  }
+
+  /**
+   * DELETE /inspections/:id
+   */
+  @Delete(':id')
+  @Roles('ADMIN_HSEE')
+  remove(@Param('id') id: string) {
+    return this.inspectionsService.remove(id);
+  }
+}
