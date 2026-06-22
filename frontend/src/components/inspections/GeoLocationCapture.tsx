@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 
+type Status = 'idle' | 'loading' | 'success' | 'denied' | 'unsupported';
+
 export default function GeoLocationCapture({ onCapture }) {
-  const [status, setStatus]   = useState('idle'); // idle | loading | success | denied | unsupported
-  const [coords, setCoords]   = useState(null);
-  const [error,  setError]    = useState('');
+  const [status, setStatus] = useState<Status>('idle');
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
+  const [error,  setError]  = useState('');
 
   const capture = () => {
     if (!navigator.geolocation) {
@@ -30,9 +32,9 @@ export default function GeoLocationCapture({ onCapture }) {
       },
       (err) => {
         setStatus('denied');
-        if (err.code === 1) setError("Accès à la localisation refusé. Vérifiez les permissions du navigateur.");
-        else if (err.code === 2) setError("Position introuvable. Réessayez.");
-        else setError("Délai dépassé. Réessayez.");
+        if (err.code === 1)      setError('Accès à la localisation refusé. Vérifiez les permissions du navigateur.');
+        else if (err.code === 2) setError('Position introuvable. Réessayez.');
+        else                     setError('Délai dépassé. Réessayez.');
         onCapture({ latitude: undefined, longitude: undefined });
       },
       { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true }
@@ -56,12 +58,11 @@ export default function GeoLocationCapture({ onCapture }) {
 
   if (status === 'success' && coords) {
     return (
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ p: 1.5, border: '1px solid', borderColor: 'success.light', borderRadius: 2, bgcolor: 'rgba(29,158,117,0.06)' }}
-      >
+      <Box sx={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        p: 1.5, border: '1px solid', borderColor: 'success.light',
+        borderRadius: 2, bgcolor: 'rgba(29,158,117,0.06)',
+      }}>
         <Box display="flex" alignItems="center" gap={1}>
           <LocationOnIcon sx={{ color: 'success.main', fontSize: 20 }} />
           <Box>
@@ -70,13 +71,11 @@ export default function GeoLocationCapture({ onCapture }) {
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {coords.latitude.toFixed(5)}, {coords.longitude.toFixed(5)}
-              {coords.accuracy && ` · ±${Math.round(coords.accuracy)}m`}
+              {coords.accuracy ? ` · ±${Math.round(coords.accuracy)}m` : ''}
             </Typography>
           </Box>
         </Box>
-        <Button size="small" color="inherit" onClick={reset}>
-          Effacer
-        </Button>
+        <Button size="small" color="inherit" onClick={reset}>Effacer</Button>
       </Box>
     );
   }

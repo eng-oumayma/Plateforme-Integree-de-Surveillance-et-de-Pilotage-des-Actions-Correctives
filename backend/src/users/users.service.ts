@@ -109,21 +109,31 @@ export class UsersService {
     });
   }
 
-  async findAll(): Promise<User[]> {
-    return this.repo.find({
-      order: { createdAt: 'DESC' },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-        department: true,
-        status: true,
-        createdAt: true,
-      },
-    });
-  }
+  // async findAll(): Promise<User[]> {
+  //   return this.repo.find({
+  //     order: { createdAt: 'DESC' },
+  //     select: {
+  //       id: true,
+  //       firstName: true,
+  //       lastName: true,
+  //       email: true,
+  //       role: true,
+  //       department: true,
+  //       status: true,
+  //       createdAt: true,
+  //     },
+  //   });
+  // }
+
+
+async findAll(filters?: { role?: string }) {
+  const where: any = {};
+  if (filters?.role) where.role = filters.role;
+  return this.repo.find({ where, order: { createdAt: 'DESC' } });
+}
+
+
+
 
   // ── PUT modifier un user ───────────────────────────
   async update(id: string, dto: UpdateUserDto): Promise<User> {
