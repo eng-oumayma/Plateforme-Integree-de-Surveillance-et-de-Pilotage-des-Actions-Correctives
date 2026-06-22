@@ -1,12 +1,13 @@
-// import { Module } from '@nestjs/common';
-// import { InspectionsService } from './inspections.service';
-// import { InspectionsController } from './inspections.controller';
-// import { PrismaModule } from '../prisma/prisma.module';
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Inspection } from './inspection.entity';
+import { InspectionsService } from './inspections.service';
+import { InspectionsController } from './inspections.controller';
 
-// @Module({
-//   imports: [PrismaModule],
-//   controllers: [InspectionsController],
-//   providers: [InspectionsService],
-//   exports: [InspectionsService],
-// })
-// export class InspectionsModule {}
+@Module({
+  imports: [TypeOrmModule.forFeature([Inspection])],
+  controllers: [InspectionsController],
+  providers: [InspectionsService],
+  exports: [InspectionsService],
+})
+export class InspectionsModule {}

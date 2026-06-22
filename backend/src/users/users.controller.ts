@@ -9,6 +9,7 @@ import {
   Patch,
   Delete,
   Param,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { MailService } from '../mail/mail.service';
@@ -48,11 +49,20 @@ export class UsersController {
   }
 
   // GET /api/users  ← Admin voit tous les users
-  @Get()
-  @Roles(Role.ADMIN_HSEE)
-  findAll() {
-    return this.usersService.findAll();
-  }
+  // @Get()
+  // @Roles(Role.ADMIN_HSEE)
+  // findAll() {
+  //   return this.usersService.findAll();
+  //}
+
+@Get()
+@Roles(Role.ADMIN_HSEE)
+findAll(@Query('role') role?: string) {
+  return this.usersService.findAll({ role });
+}
+
+
+
   // GET /api/users/:id ← détail d'un user
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -76,3 +86,7 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 }
+function findAll(arg0: any, arg1: any) {
+  throw new Error('Function not implemented.');
+}
+

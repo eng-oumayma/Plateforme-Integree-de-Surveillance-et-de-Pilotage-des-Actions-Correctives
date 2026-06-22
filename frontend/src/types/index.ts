@@ -55,7 +55,7 @@ export type Domaine =
   | 'Sanitaires'
   | 'Cantine'
   | 'Chimique'
-  | 'Locaux techniques'
+  | 'Locaux_techniques'
   | 'Déchets'
   | 'Transport'
   | 'Infirmerie'
@@ -63,9 +63,17 @@ export type Domaine =
   | 'Incendie';
 
 export const DOMAINES: Domaine[] = [
-  'Plant', 'Magasin', 'Sanitaires', 'Cantine', 'Chimique',
-  'Locaux techniques', 'Déchets', 'Transport', 'Infirmerie',
-  'Recycleurs', 'Incendie',
+  'Plant', 
+  'Magasin', 
+  'Sanitaires', 
+  'Cantine', 
+  'Chimique',
+  'Locaux_techniques', 
+  'Déchets', 
+  'Transport', 
+  'Infirmerie',
+  'Recycleurs', 
+  'Incendie',
 ];
 
 export type InspectionStatus = 'EN_COURS' | 'TERMINEE' | 'VALIDEE' | 'ANNULEE';
