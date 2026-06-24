@@ -192,7 +192,7 @@
 //               bgcolor: "primary.main",
 //               fontSize: 12,
 //             }}
-//           > 
+//           >
 //             {params.row.firstName?.[0]}
 //             {params.row.lastName?.[0]}
 //           </Avatar>
@@ -536,10 +536,26 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  Box, Typography, Button, TextField, MenuItem, Select,
-  FormControl, InputLabel, Chip, IconButton, Tooltip, Avatar,
-  Dialog, DialogTitle, DialogContent, DialogActions, Alert,
-  CircularProgress, InputAdornment, Paper,
+  Box,
+  Typography,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Chip,
+  IconButton,
+  Tooltip,
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  Paper,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -550,7 +566,12 @@ import PersonOffIcon from "@mui/icons-material/PersonOff";
 import PersonIcon from "@mui/icons-material/Person";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { userService } from "../../services/userService";
-import type { User, UserRole, CreateUserPayload, UpdateUserPayload } from "../../types";
+import type {
+  User,
+  UserRole,
+  CreateUserPayload,
+  UpdateUserPayload,
+} from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 
 // ── AccountStatus (doit correspondre exactement à votre backend) ────────────
@@ -558,46 +579,65 @@ type AccountStatus = "PENDING" | "ACTIVE" | "INACTIVE";
 
 const ROLES = [
   { value: "ADMIN_HSEE" as UserRole, label: "Admin HSEE" },
-  { value: "AUDITEUR"   as UserRole, label: "Auditeur" },
-  { value: "PILOTE_ACTION"     as UserRole, label: "Pilote d'Action" },
+  { value: "AUDITEUR" as UserRole, label: "Auditeur" },
+  { value: "PILOTE_ACTION" as UserRole, label: "Pilote d'Action" },
 ];
 
-const DEPARTMENTS = ["HSE", "Production", "Maintenance", "Qualité", "Logistique", "RH", "Direction"];
+const DEPARTMENTS = [
+  "HSE",
+  "Production",
+  "Maintenance",
+  "Qualité",
+  "Logistique",
+  "RH",
+  "Direction",
+];
 
 const ROLE_COLORS: Record<string, "primary" | "success" | "warning"> = {
   ADMIN_HSEE: "primary",
-  AUDITEUR:   "success",
-  PILOTE_ACTION:     "warning",
+  AUDITEUR: "success",
+  PILOTE_ACTION: "warning",
 };
 
 // ── Couleur et label selon AccountStatus ────────────────────────────────────
-const STATUS_CHIP: Record<AccountStatus, { label: string; color: "success" | "default" | "warning"; variant: "filled" | "outlined" }> = {
-  ACTIVE:   { label: "Actif",    color: "success", variant: "filled"   },
-  INACTIVE: { label: "Inactif",  color: "default", variant: "outlined" },
-  PENDING:  { label: "En attente", color: "warning", variant: "outlined" },
+const STATUS_CHIP: Record<
+  AccountStatus,
+  {
+    label: string;
+    color: "success" | "default" | "warning";
+    variant: "filled" | "outlined";
+  }
+> = {
+  ACTIVE: { label: "Actif", color: "success", variant: "filled" },
+  INACTIVE: { label: "Inactif", color: "default", variant: "outlined" },
+  PENDING: { label: "En attente", color: "warning", variant: "outlined" },
 };
 
 const defaultCreate: CreateUserPayload = {
-  firstName: "", lastName: "", email: "", role: "AUDITEUR", department: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  role: "AUDITEUR",
+  department: "",
 };
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
-  const [users, setUsers]           = useState<any[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState("");
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const [dialogOpen, setDialogOpen]   = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [formData, setFormData]       = useState<CreateUserPayload>(defaultCreate);
-  const [formError, setFormError]     = useState("");
-  const [saving, setSaving]           = useState(false);
+  const [formData, setFormData] = useState<CreateUserPayload>(defaultCreate);
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [toggleTarget, setToggleTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
-  const [deleting, setDeleting]         = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const fetchUsers = useCallback(async () => {
@@ -612,19 +652,23 @@ export default function UsersPage() {
     }
   }, []);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // ── Filtrage — utilise "status" (backend TypeORM) ─────────────────────────
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       !search ||
-      `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(search.toLowerCase());
+      `${u.firstName} ${u.lastName} ${u.email}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
     const matchesRole = !roleFilter || u.role === roleFilter;
     const matchesStatus =
       !statusFilter ||
-      (statusFilter === "active"   && u.status === "ACTIVE")   ||
+      (statusFilter === "active" && u.status === "ACTIVE") ||
       (statusFilter === "inactive" && u.status === "INACTIVE") ||
-      (statusFilter === "pending"  && u.status === "PENDING");
+      (statusFilter === "pending" && u.status === "PENDING");
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -638,7 +682,13 @@ export default function UsersPage() {
 
   const openEdit = (u: any) => {
     setEditingUser(u);
-    setFormData({ firstName: u.firstName, lastName: u.lastName, email: u.email, role: u.role, department: u.department });
+    setFormData({
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      role: u.role,
+      department: u.department,
+    });
     setFormError("");
     setDialogOpen(true);
   };
@@ -648,18 +698,18 @@ export default function UsersPage() {
     setSaving(true);
 
     // 🔥 AJOUTE CE LOG ICI :
-  console.log("=== PAYLOAD ENVOYÉ AU BACKEND ===", {
-    firstName: formData.firstName.trim(),
-    lastName:  formData.lastName.trim(),
-    email:     formData.email.trim().toLowerCase(),
-    role:      formData.role, // 👈 Regarde ce qui s'affiche ici dans ta console !
-    department: formData.department,
-  });
+    console.log("=== PAYLOAD ENVOYÉ AU BACKEND ===", {
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim().toLowerCase(),
+      role: formData.role, // 👈 Regarde ce qui s'affiche ici dans ta console !
+      department: formData.department,
+    });
     try {
       if (editingUser) {
         const payload: UpdateUserPayload = {
           firstName: formData.firstName,
-          lastName:  formData.lastName,
+          lastName: formData.lastName,
           department: formData.department,
           role: formData.role, // 👈 Assurez-vous que le rôle est inclus dans le payload
         };
@@ -690,8 +740,8 @@ export default function UsersPage() {
         prev.map((u) =>
           u.id === toggleTarget.id
             ? { ...u, status: makeActive ? "ACTIVE" : "INACTIVE" }
-            : u
-        )
+            : u,
+        ),
       );
     } catch (err: unknown) {
       const msg = (err as any)?.response?.data?.message;
@@ -718,9 +768,9 @@ export default function UsersPage() {
   // ── Export ────────────────────────────────────────────────────────────────
   const handleExport = async () => {
     const blob = await userService.exportCsv();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
     a.download = `utilisateurs-hsee-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
   };
@@ -728,26 +778,50 @@ export default function UsersPage() {
   // ── Colonnes ──────────────────────────────────────────────────────────────
   const columns: any[] = [
     {
-      field: "name", headerName: "Utilisateur", flex: 1.5, minWidth: 200,
+      field: "name",
+      headerName: "Utilisateur",
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params: any) => (
         <Box display="flex" alignItems="center" gap={1.5} height="100%">
-          <Avatar src={params.row.avatarUrl} sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: 12 }}>
-            {params.row.firstName?.[0]}{params.row.lastName?.[0]}
+          <Avatar
+            src={params.row.avatarUrl}
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: "primary.main",
+              fontSize: 12,
+            }}
+          >
+            {params.row.firstName?.[0]}
+            {params.row.lastName?.[0]}
           </Avatar>
           <Box>
             <Typography variant="body2" fontWeight={500}>
               {params.row.firstName} {params.row.lastName}
             </Typography>
-            <Typography variant="caption" color="text.secondary">{params.row.email}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {params.row.email}
+            </Typography>
           </Box>
         </Box>
       ),
     },
     {
-      field: "role", headerName: "Rôle", width: 150,
+      field: "role",
+      headerName: "Rôle",
+      width: 150,
       renderCell: (params: any) => {
-        const label = ROLES.find((r) => r.value === params.row.role)?.label || params.row.role;
-        return <Chip label={label} size="small" color={ROLE_COLORS[params.row.role] || "default"} />;
+        const label =
+          ROLES.find((r) => r.value === params.row.role)?.label ||
+          params.row.role;
+        return (
+          <Chip
+            label={label}
+            size="small"
+            color={ROLE_COLORS[params.row.role] || "default"}
+          />
+        );
       },
     },
     { field: "department", headerName: "Département", width: 140 },
@@ -759,11 +833,20 @@ export default function UsersPage() {
         // Lit directement "status" retourné par le backend TypeORM
         const s = (params.row.status || "PENDING") as AccountStatus;
         const cfg = STATUS_CHIP[s] || STATUS_CHIP.PENDING;
-        return <Chip label={cfg.label} size="small" color={cfg.color} variant={cfg.variant} />;
+        return (
+          <Chip
+            label={cfg.label}
+            size="small"
+            color={cfg.color}
+            variant={cfg.variant}
+          />
+        );
       },
     },
     {
-      field: "crée en", headerName: "Date de création", width: 170,
+      field: "crée en",
+      headerName: "Date de création",
+      width: 170,
       renderCell: (params: any) => (
         <Typography variant="caption" color="text.secondary">
           {params.row.createdAt
@@ -773,10 +856,13 @@ export default function UsersPage() {
       ),
     },
     {
-      field: "actions", headerName: "Actions", width: 130, sortable: false,
+      field: "actions",
+      headerName: "Actions",
+      width: 130,
+      sortable: false,
       renderCell: (params: any) => {
-        const isSelf    = params.row.id === currentUser?.id;
-        const isActive  = params.row.status === "ACTIVE";
+        const isSelf = params.row.id === currentUser?.id;
+        const isActive = params.row.status === "ACTIVE";
         const isPending = params.row.status === "PENDING";
         return (
           <Box display="flex" gap={0.5} height="100%" alignItems="center">
@@ -795,7 +881,11 @@ export default function UsersPage() {
                   onClick={() => setToggleTarget(params.row)}
                   color={isActive ? "warning" : "success"}
                 >
-                  {isActive ? <PersonOffIcon fontSize="small" /> : <PersonIcon fontSize="small" />}
+                  {isActive ? (
+                    <PersonOffIcon fontSize="small" />
+                  ) : (
+                    <PersonIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Tooltip>
             )}
@@ -803,7 +893,11 @@ export default function UsersPage() {
             {/* Supprimer — pas sur soi-même */}
             {!isSelf && (
               <Tooltip title="Supprimer">
-                <IconButton size="small" color="error" onClick={() => setDeleteTarget(params.row)}>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => setDeleteTarget(params.row)}
+                >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -817,18 +911,34 @@ export default function UsersPage() {
   return (
     <Box>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="flex-start"
+        mb={3}
+      >
         <Box>
-          <Typography variant="h5" fontWeight={600}>Gestion des utilisateurs</Typography>
+          <Typography variant="h5" fontWeight={600}>
+            Gestion des utilisateurs
+          </Typography>
           <Typography variant="body2" color="text.secondary">
-            {users.filter((u) => u.status === "ACTIVE").length} actif(s) · {users.length} total
+            {users.filter((u) => u.status === "ACTIVE").length} actif(s) ·{" "}
+            {users.length} total
           </Typography>
         </Box>
         <Box display="flex" gap={1}>
-          <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExport}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleExport}
+          >
             Exporter CSV
           </Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={openCreate}
+          >
             Nouvel utilisateur
           </Button>
         </Box>
@@ -844,20 +954,34 @@ export default function UsersPage() {
           sx={{ minWidth: 280 }}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
             ),
           }}
         />
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Rôle</InputLabel>
-          <Select value={roleFilter} label="Rôle" onChange={(e) => setRoleFilter(e.target.value)}>
+          <Select
+            value={roleFilter}
+            label="Rôle"
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
             <MenuItem value="">Tous les rôles</MenuItem>
-            {ROLES.map((r) => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
+            {ROLES.map((r) => (
+              <MenuItem key={r.value} value={r.value}>
+                {r.label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Statut</InputLabel>
-          <Select value={statusFilter} label="Statut" onChange={(e) => setStatusFilter(e.target.value)}>
+          <Select
+            value={statusFilter}
+            label="Statut"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <MenuItem value="">Tous</MenuItem>
             <MenuItem value="active">Actifs</MenuItem>
             <MenuItem value="inactive">Inactifs</MenuItem>
@@ -872,7 +996,9 @@ export default function UsersPage() {
           rows={filteredUsers}
           columns={columns}
           loading={loading}
-          initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
+          initialState={{
+            pagination: { paginationModel: { page: 0, pageSize: 10 } },
+          }}
           pageSizeOptions={[10, 25, 50]}
           disableRowSelectionOnClick
           autoHeight
@@ -881,56 +1007,129 @@ export default function UsersPage() {
       </Paper>
 
       {/* Dialog Créer/Modifier */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingUser ? "Modifier l'utilisateur" : "Nouvel utilisateur"}</DialogTitle>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingUser ? "Modifier l'utilisateur" : "Nouvel utilisateur"}
+        </DialogTitle>
         <DialogContent>
-          {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
+          {formError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {formError}
+            </Alert>
+          )}
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mt={1}>
-            <TextField label="Prénom" value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
-            <TextField label="Nom" value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
+            <TextField
+              label="Prénom"
+              value={formData.firstName}
+              onChange={(e) =>
+                setFormData({ ...formData, firstName: e.target.value })
+              }
+              required
+            />
+            <TextField
+              label="Nom"
+              value={formData.lastName}
+              onChange={(e) =>
+                setFormData({ ...formData, lastName: e.target.value })
+              }
+              required
+            />
           </Box>
-          <TextField label="Email" type="email" value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            fullWidth required disabled={!!editingUser} sx={{ mt: 2 }}
-            helperText={editingUser ? "L'email ne peut pas être modifié" : ""} />
+          <TextField
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+            fullWidth
+            required
+            disabled={!!editingUser}
+            sx={{ mt: 2 }}
+            helperText={editingUser ? "L'email ne peut pas être modifié" : ""}
+          />
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mt={2}>
             <FormControl required>
               <InputLabel>Rôle</InputLabel>
-              <Select value={formData.role} label="Rôle"
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                disabled={!!editingUser && editingUser.id === currentUser?.id}>
-                {ROLES.map((r) => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
+              <Select
+                value={formData.role}
+                label="Rôle"
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value as UserRole })
+                }
+                disabled={!!editingUser && editingUser.id === currentUser?.id}
+              >
+                {ROLES.map((r) => (
+                  <MenuItem key={r.value} value={r.value}>
+                    {r.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <FormControl required>
               <InputLabel>Département</InputLabel>
-              <Select value={formData.department} label="Département"
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}>
-                {DEPARTMENTS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+              <Select
+                value={formData.department}
+                label="Département"
+                onChange={(e) =>
+                  setFormData({ ...formData, department: e.target.value })
+                }
+              >
+                {DEPARTMENTS.map((d) => (
+                  <MenuItem key={d} value={d}>
+                    {d}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>
           {!editingUser && (
             <Alert severity="info" sx={{ mt: 2 }}>
-              Un email de bienvenue sera envoyé avec un lien pour définir le mot de passe (valable 48h).
+              Un email de bienvenue sera envoyé avec un lien pour définir le mot
+              de passe (valable 48h).
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Annuler</Button>
-          <Button onClick={handleSave} variant="contained"
-            disabled={saving || !formData.firstName || !formData.lastName || !formData.email || !formData.department}>
-            {saving ? <CircularProgress size={20} /> : editingUser ? "Enregistrer" : "Créer"}
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={
+              saving ||
+              !formData.firstName ||
+              !formData.lastName ||
+              !formData.email ||
+              !formData.department
+            }
+          >
+            {saving ? (
+              <CircularProgress size={20} />
+            ) : editingUser ? (
+              "Enregistrer"
+            ) : (
+              "Créer"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Dialog Toggle statut */}
-      <Dialog open={!!toggleTarget} onClose={() => setToggleTarget(null)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={!!toggleTarget}
+        onClose={() => setToggleTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>
-          {toggleTarget?.status === "ACTIVE" ? "Désactiver le compte" : "Activer le compte"}
+          {toggleTarget?.status === "ACTIVE"
+            ? "Désactiver le compte"
+            : "Activer le compte"}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2">
@@ -952,21 +1151,40 @@ export default function UsersPage() {
       </Dialog>
 
       {/* Dialog Supprimer */}
-      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ color: "error.main" }}>Supprimer le compte</DialogTitle>
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: "error.main" }}>
+          Supprimer le compte
+        </DialogTitle>
         <DialogContent>
           <Alert severity="error" sx={{ mb: 2 }}>
             Cette action est <strong>irréversible</strong>.
           </Alert>
           <Typography variant="body2">
             Supprimer définitivement le compte de{" "}
-            <strong>{deleteTarget?.firstName} {deleteTarget?.lastName}</strong> ({deleteTarget?.email}) ?
+            <strong>
+              {deleteTarget?.firstName} {deleteTarget?.lastName}
+            </strong>{" "}
+            ({deleteTarget?.email}) ?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteTarget(null)}>Annuler</Button>
-          <Button onClick={handleDelete} variant="contained" color="error" disabled={deleting}>
-            {deleting ? <CircularProgress size={20} color="inherit" /> : "Supprimer définitivement"}
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+          >
+            {deleting ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Supprimer définitivement"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

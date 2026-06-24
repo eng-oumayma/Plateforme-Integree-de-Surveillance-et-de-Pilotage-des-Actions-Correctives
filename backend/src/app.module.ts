@@ -9,9 +9,24 @@ import { Inspection } from './inspections/inspection.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PlanningModule } from './planning/planning.module';
 import { PlanSurveillance } from './planning/Plan-surveillance.entity';
+=======
+
+import { ChecklistTemplate } from './checklists/checklist-template.entity';
+import { ChecklistItem } from './checklists/checklist-item.entity';
+import { ChecklistsModule } from './checklists/checklists.module';
+import { ChecklistResponsePhoto } from './checklists/checklist-response-photo.entity';
+import { ChecklistResponse } from './checklists/checklist-response.entity';
+// Ajouter ServeStaticModule pour servir les photos
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,7 +37,10 @@ import { PlanSurveillance } from './planning/Plan-surveillance.entity';
   username: config.get<string>('DB_USER'),
   password: config.get<string>('DB_PASS'),
   database: config.get<string>('DB_NAME'),
-  entities: [User,Inspection,PlanSurveillance],
+  entities: [User,Inspection,PlanSurveillance, ChecklistTemplate,
+          ChecklistItem,
+          ChecklistResponse, // ← ajouter
+          ChecklistResponsePhoto],
   synchronize: true, 
   logging: false,
 }),
@@ -32,6 +50,7 @@ import { PlanSurveillance } from './planning/Plan-surveillance.entity';
     InspectionsModule,
     ScheduleModule.forRoot(),   // ← active les crons NestJS
     PlanningModule,
+    ChecklistsModule,
   ],
 })
 export class AppModule {}
