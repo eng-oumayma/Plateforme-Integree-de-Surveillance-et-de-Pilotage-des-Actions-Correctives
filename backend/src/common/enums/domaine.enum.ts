@@ -1,4 +1,6 @@
+// src/common/enums/domaine.enum.ts
 export enum Domaine {
+<<<<<<< HEAD
   PLANT              = 'Plant',
   MAGASIN            = 'Magasin',
   SANITAIRES         = 'Sanitaires',
@@ -25,3 +27,17 @@ export const DOMAINE_LABELS: Record<Domaine, string> = {
   [Domaine.RECYCLEURS]:        'Recycleurs',
   [Domaine.INCENDIE]:          'Incendie',
 };
+=======
+  PLANT = 'Plant',
+  MAGASIN = 'Magasin',
+  SANITAIRES = 'Sanitaires',
+  CANTINE = 'Cantine',
+  CHIMIQUE = 'Chimique',
+  LOCAUX_TECHNIQUES = 'Locaux techniques',
+  DECHETS = 'Déchets',
+  TRANSPORT = 'Transport',
+  INFIRMERIE = 'Infirmerie',
+  RECYCLEURS = 'Recycleurs',
+  INCENDIE = 'Incendie',
+}
+>>>>>>> 876e21a (1ère user story de checklist)
