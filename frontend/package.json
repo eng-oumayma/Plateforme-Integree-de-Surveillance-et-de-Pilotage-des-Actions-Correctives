@@ -14,24 +14,24 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
-    "@mui/x-data-grid": "^6.20.4", 
+    "@mui/x-data-grid": "^6.20.4",
     "axios": "^1.18.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.4",
-    "recharts": "^2.12.7" 
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@types/node": "^20.11.0",
-    "@types/react": "^18.2.79", 
-    "@types/react-dom": "^18.2.25", 
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.12.0",
-    "typescript": "^5.4.5", 
+    "typescript": "^5.4.5",
     "typescript-eslint": "^8.15.0",
     "vite": "^5.4.11"
   }

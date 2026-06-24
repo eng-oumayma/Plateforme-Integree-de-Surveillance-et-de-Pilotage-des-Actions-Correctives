@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
@@ -15,7 +15,8 @@ import CreateUserPage from './pages/admin/CreateUserPage';
 import SetPasswordPage from './pages/auth/SetPasswordPage';
 import InspectionsListPage from './pages/inspections/InspectionsListPage';
 import CreateInspectionPage from './pages/inspections/CreateInspectionPage';
-=======
+import PlanningCalendarPage from './pages/planning/Planningcalendarpage';
+import PlanningConfigPage from './pages/planning/Planningconfigpage';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -33,7 +34,7 @@ import SetPasswordPage from "./pages/auth/SetPasswordPage";
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
 
->>>>>>> 876e21a (1ère user story de checklist)
+
 const theme = createTheme({
   palette: {
     primary: { main: "#1565C0" },
@@ -103,13 +104,53 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+               <Route
+                path="/inspections"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN_HSEE', 'AUDITEUR']}>
+                    <InspectionsListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/inspections/new"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN_HSEE', 'AUDITEUR']}>
+                    <CreateInspectionPage />
+                  </ProtectedRoute>
+                }
+              />
+               {/* <Route
+                path="/inspections/:id/edit"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN_HSEE', 'AUDITEUR']}>
+                    <EditInspectionPage />
+                  </ProtectedRoute>
+                }
+              /> */}
+
+                 {/* ── Planning 52 semaines (Admin seulement) ── */}
+              <Route
+                path="/planning"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN_HSEE']}>
+                    <PlanningCalendarPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/planning/new"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN_HSEE']}>
+                    <PlanningConfigPage />
+                  </ProtectedRoute>
+                }
+              />
+
+
               {/* Future epics — placeholder */}
-<<<<<<< HEAD
-              <Route path="/inspections" element={<InspectionsListPage />} />
-              <Route path="/inspections/new" element={<CreateInspectionPage />} />
-              <Route path="/checklists" element={<DashboardPage />} />
-=======
-              <Route path="/inspections" element={<DashboardPage />} />
+
+            
 
               <Route
                 path="/checklists"
@@ -137,12 +178,12 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
->>>>>>> 876e21a (1ère user story de checklist)
               <Route path="/anomalies" element={<DashboardPage />} />
               <Route path="/actions" element={<DashboardPage />} />
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
               <Route path="/notifications" element={<DashboardPage />} />
-              <Route path="/calendar" element={<DashboardPage />} />
+              
+            
             </Route>
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
