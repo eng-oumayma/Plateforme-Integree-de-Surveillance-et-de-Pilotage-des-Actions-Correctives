@@ -28,12 +28,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { checklistService } from "../../../services/checklistService";
+import { useAuth } from "../../../contexts/AuthContext";
 import type {
   ChecklistTemplate,
   Domaine,
   CotationType,
 } from "../../../types/checklist.types";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 const DOMAINES: Domaine[] = [
   "Plant",
   "Magasin",
@@ -57,8 +59,22 @@ const COTATION_LABELS: Record<CotationType, string> = {
   TARGET: "Variable par item  →  Plant, Déchets",
 };
 
+const COTATION_IMPORT_OPTIONS = [
+  { value: "0_1", label: "0 / 1  →  Locaux techniques, Chimique, Incendie" },
+  { value: "0_1_2", label: "0 / 1 / 2  →  Cantine, Infirmerie, Transport" },
+  { value: "0_1_2_NA", label: "0 / 1 / 2 / NA" },
+  { value: "0_1_2_3", label: "0 / 1 / 2 / 3" },
+  { value: "0_4_6_8_10", label: "0 / 4 / 6 / 8 / 10  →  Sanitaires" },
+  { value: "TARGET", label: "Variable par item  →  Plant, Déchets" },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function ChecklistTemplatesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN_HSEE";
+
+  // ── State ──────────────────────────────────────────────────────────────────
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -77,14 +93,19 @@ export default function ChecklistTemplatesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ChecklistTemplate | null>(
     null,
   );
+  const [deleting, setDeleting] = useState(false);
 
+  // ── Data ───────────────────────────────────────────────────────────────────
   const load = async () => {
     setLoading(true);
+    setError("");
     try {
       const data = await checklistService.getAll();
       setTemplates(data);
     } catch {
-      setError("Impossible de charger les templates.");
+      setError(
+        "Impossible de charger les templates. Vérifiez votre connexion.",
+      );
     } finally {
       setLoading(false);
     }
@@ -98,14 +119,18 @@ export default function ChecklistTemplatesPage() {
     ? templates.filter((t) => t.domaine === filterDomaine)
     : templates;
 
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeleting(true);
     try {
       await checklistService.remove(deleteTarget.id);
       setDeleteTarget(null);
       load();
     } catch {
-      setError("Erreur lors de la suppression.");
+      setError("Erreur lors de la désactivation.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -128,15 +153,27 @@ export default function ChecklistTemplatesPage() {
       setImportCotation("");
       load();
     } catch (err: any) {
-      setImportError(err?.response?.data?.message || "Erreur import.");
+      setImportError(
+        err?.response?.data?.message || "Erreur lors de l'import.",
+      );
     } finally {
       setImporting(false);
     }
   };
 
+  const handleCloseImport = () => {
+    setImportOpen(false);
+    setImportError("");
+    setImportFile(null);
+    setImportDomaine("");
+    setImportTitre("");
+    setImportCotation("");
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <Box>
-      {/* Header */}
+      {/* ── Header ── */}
       <Box
         display="flex"
         justifyContent="space-between"
@@ -152,25 +189,29 @@ export default function ChecklistTemplatesPage() {
             {templates.length} total
           </Typography>
         </Box>
-        <Box display="flex" gap={1}>
-          <Button
-            variant="outlined"
-            startIcon={<UploadFileIcon />}
-            onClick={() => setImportOpen(true)}
-          >
-            Importer Excel
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate("/checklists/builder")}
-          >
-            Nouveau template
-          </Button>
-        </Box>
+
+        {/* Boutons visibles seulement pour Admin */}
+        {isAdmin && (
+          <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              startIcon={<UploadFileIcon />}
+              onClick={() => setImportOpen(true)}
+            >
+              Importer Excel
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/checklists/builder")}
+            >
+              Nouveau template
+            </Button>
+          </Box>
+        )}
       </Box>
 
-      {/* Filtre domaine */}
+      {/* ── Filtre domaine ── */}
       <Box mb={2}>
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Filtrer par domaine</InputLabel>
@@ -195,6 +236,7 @@ export default function ChecklistTemplatesPage() {
         </Alert>
       )}
 
+      {/* ── Contenu ── */}
       {loading ? (
         <Box display="flex" justifyContent="center" py={6}>
           <CircularProgress />
@@ -210,14 +252,18 @@ export default function ChecklistTemplatesPage() {
           }}
         >
           <Typography color="text.secondary" mb={2}>
-            Aucun template trouvé.
+            {filterDomaine
+              ? `Aucun template trouvé pour le domaine "${filterDomaine}".`
+              : "Aucun template créé pour l'instant."}
           </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/checklists/builder")}
-          >
-            Créer le premier template
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="contained"
+              onClick={() => navigate("/checklists/builder")}
+            >
+              Créer le premier template
+            </Button>
+          )}
         </Paper>
       ) : (
         <Paper
@@ -228,10 +274,10 @@ export default function ChecklistTemplatesPage() {
             overflow: "hidden",
           }}
         >
-          {/* Header tableau */}
+          {/* Entête tableau */}
           <Box
             display="grid"
-            gridTemplateColumns="2fr 1.5fr 1fr 1fr 1fr 120px"
+            gridTemplateColumns="2fr 1.5fr 1fr 1fr 1fr 100px"
             gap={2}
             sx={{
               px: 2,
@@ -266,7 +312,7 @@ export default function ChecklistTemplatesPage() {
             <Box
               key={t.id}
               display="grid"
-              gridTemplateColumns="2fr 1.5fr 1fr 1fr 1fr 120px"
+              gridTemplateColumns="2fr 1.5fr 1fr 1fr 1fr 100px"
               gap={2}
               alignItems="center"
               sx={{
@@ -276,8 +322,10 @@ export default function ChecklistTemplatesPage() {
                 borderColor: "divider",
                 "&:last-child": { borderBottom: "none" },
                 "&:hover": { bgcolor: "grey.50" },
+                opacity: t.actif ? 1 : 0.5,
               }}
             >
+              {/* Domaine + Titre */}
               <Box>
                 <Typography variant="body2" fontWeight={500}>
                   {t.domaine}
@@ -287,16 +335,20 @@ export default function ChecklistTemplatesPage() {
                 </Typography>
               </Box>
 
-              <Typography variant="body2" color="text.secondary" fontSize={12}>
-                {COTATION_LABELS[t.cotationType]}
+              {/* Type cotation */}
+              <Typography variant="body2" color="text.secondary" fontSize={11}>
+                {COTATION_LABELS[t.cotationType] ?? t.cotationType}
               </Typography>
 
+              {/* Version */}
               <Chip label={`v${t.version}`} size="small" variant="outlined" />
 
+              {/* Nb items */}
               <Typography variant="body2">
                 {t.items?.length ?? 0} items
               </Typography>
 
+              {/* Statut */}
               <Chip
                 label={t.actif ? "Actif" : "Inactif"}
                 size="small"
@@ -304,16 +356,10 @@ export default function ChecklistTemplatesPage() {
                 variant={t.actif ? "filled" : "outlined"}
               />
 
+              {/* Actions */}
               <Box display="flex" gap={0.5}>
-                <Tooltip title="Voir / Modifier">
-                  <IconButton
-                    size="small"
-                    onClick={() => navigate(`/checklists/builder/${t.id}`)}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Aperçu">
+                {/* Aperçu — visible pour tout le monde */}
+                <Tooltip title="Voir les items">
                   <IconButton
                     size="small"
                     onClick={() => navigate(`/checklists/${t.id}`)}
@@ -321,32 +367,49 @@ export default function ChecklistTemplatesPage() {
                     <VisibilityIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Désactiver">
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setDeleteTarget(t)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+
+                {/* Modifier + Désactiver — Admin seulement */}
+                {isAdmin && (
+                  <>
+                    <Tooltip title="Modifier">
+                      <IconButton
+                        size="small"
+                        onClick={() => navigate(`/checklists/builder/${t.id}`)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t.actif ? "Désactiver" : "Déjà inactif"}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={!t.actif}
+                          onClick={() => setDeleteTarget(t)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </>
+                )}
               </Box>
             </Box>
           ))}
         </Paper>
       )}
 
-      {/* Dialog Import Excel */}
+      {/* ── Dialog Import Excel ── */}
       <Dialog
         open={importOpen}
-        onClose={() => setImportOpen(false)}
+        onClose={handleCloseImport}
         maxWidth="sm"
         fullWidth
       >
         <DialogTitle>Importer depuis Excel</DialogTitle>
         <DialogContent>
           {importError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
               {importError}
             </Alert>
           )}
@@ -372,6 +435,7 @@ export default function ChecklistTemplatesPage() {
             onChange={(e) => setImportTitre(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
+            placeholder="ex: Checklist Surveillance Cantine"
           />
 
           <FormControl fullWidth sx={{ mb: 2 }}>
@@ -383,13 +447,15 @@ export default function ChecklistTemplatesPage() {
                 setImportCotation(e.target.value as CotationType)
               }
             >
-              {Object.entries(COTATION_LABELS).map(([val, label]) => (
-                <MenuItem key={val} value={val}>
+              {COTATION_IMPORT_OPTIONS.map(({ value, label }) => (
+                <MenuItem key={value} value={value}>
                   {label}
                 </MenuItem>
               ))}
             </Select>
-            <FormHelperText>Choisir selon le domaine</FormHelperText>
+            <FormHelperText>
+              Choisir selon le domaine sélectionné
+            </FormHelperText>
           </FormControl>
 
           <Button
@@ -397,9 +463,10 @@ export default function ChecklistTemplatesPage() {
             component="label"
             fullWidth
             startIcon={<UploadFileIcon />}
+            color={importFile ? "success" : "inherit"}
           >
             {importFile
-              ? importFile.name
+              ? `✓ ${importFile.name}`
               : "Sélectionner le fichier Excel (.xlsx)"}
             <input
               type="file"
@@ -410,7 +477,9 @@ export default function ChecklistTemplatesPage() {
           </Button>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setImportOpen(false)}>Annuler</Button>
+          <Button onClick={handleCloseImport} color="inherit">
+            Annuler
+          </Button>
           <Button
             variant="contained"
             onClick={handleImport}
@@ -422,12 +491,16 @@ export default function ChecklistTemplatesPage() {
               !importCotation
             }
           >
-            {importing ? <CircularProgress size={20} /> : "Importer"}
+            {importing ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Importer"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog suppression */}
+      {/* ── Dialog Désactivation ── */}
       <Dialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -436,6 +509,9 @@ export default function ChecklistTemplatesPage() {
       >
         <DialogTitle>Désactiver le template</DialogTitle>
         <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Le template sera désactivé mais l'historique sera conservé.
+          </Alert>
           <Typography variant="body2">
             Désactiver <strong>{deleteTarget?.titre}</strong> (
             {deleteTarget?.domaine}) ? Il ne sera plus utilisable pour les
@@ -443,9 +519,20 @@ export default function ChecklistTemplatesPage() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Annuler</Button>
-          <Button onClick={handleDelete} variant="contained" color="error">
-            Désactiver
+          <Button onClick={() => setDeleteTarget(null)} color="inherit">
+            Annuler
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+          >
+            {deleting ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Désactiver"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

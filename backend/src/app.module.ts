@@ -9,7 +9,6 @@ import { Inspection } from './inspections/inspection.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PlanningModule } from './planning/planning.module';
 import { PlanSurveillance } from './planning/Plan-surveillance.entity';
-=======
 
 import { ChecklistTemplate } from './checklists/checklist-template.entity';
 import { ChecklistItem } from './checklists/checklist-item.entity';
@@ -31,24 +30,29 @@ import { join } from 'path';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-  type: 'postgres',
-  host: config.get<string>('DB_HOST'),
-  port: parseInt(config.get<string>('DB_PORT') || '5432', 10), //  Conversion propre
-  username: config.get<string>('DB_USER'),
-  password: config.get<string>('DB_PASS'),
-  database: config.get<string>('DB_NAME'),
-  entities: [User,Inspection,PlanSurveillance, ChecklistTemplate,
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: parseInt(config.get<string>('DB_PORT') || '5432', 10), //  Conversion propre
+        username: config.get<string>('DB_USER'),
+        password: config.get<string>('DB_PASS'),
+        database: config.get<string>('DB_NAME'),
+        entities: [
+          User,
+          Inspection,
+          PlanSurveillance,
+          ChecklistTemplate,
           ChecklistItem,
           ChecklistResponse, // ← ajouter
-          ChecklistResponsePhoto],
-  synchronize: true, 
-  logging: false,
-}),
+          ChecklistResponsePhoto,
+        ],
+        synchronize: true,
+        logging: false,
+      }),
     }),
     UsersModule,
     AuthModule,
     InspectionsModule,
-    ScheduleModule.forRoot(),   // ← active les crons NestJS
+    ScheduleModule.forRoot(), // ← active les crons NestJS
     PlanningModule,
     ChecklistsModule,
   ],
