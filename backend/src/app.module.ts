@@ -6,7 +6,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { InspectionsModule } from './inspections/inspections.module';
 import { Inspection } from './inspections/inspection.entity';
-
+import { ScheduleModule } from '@nestjs/schedule';
+import { PlanningModule } from './planning/planning.module';
+import { PlanSurveillance } from './planning/Plan-surveillance.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -20,7 +22,7 @@ import { Inspection } from './inspections/inspection.entity';
   username: config.get<string>('DB_USER'),
   password: config.get<string>('DB_PASS'),
   database: config.get<string>('DB_NAME'),
-  entities: [User,Inspection],
+  entities: [User,Inspection,PlanSurveillance],
   synchronize: true, 
   logging: false,
 }),
@@ -28,6 +30,8 @@ import { Inspection } from './inspections/inspection.entity';
     UsersModule,
     AuthModule,
     InspectionsModule,
+    ScheduleModule.forRoot(),   // ← active les crons NestJS
+    PlanningModule,
   ],
 })
 export class AppModule {}
