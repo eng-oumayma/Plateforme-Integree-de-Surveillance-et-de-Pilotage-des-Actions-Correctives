@@ -1,9 +1,13 @@
-import api from '../api/api';
-import type { User, CreateUserPayload, UpdateUserPayload } from '../types';
+import api from "../api/api";
+import type { User, CreateUserPayload, UpdateUserPayload } from "../types";
 
 export const userService = {
-  async getAll(params?: { role?: string; isActive?: boolean; department?: string }): Promise<User[]> {
-    const { data } = await api.get('/users', { params });
+  async getAll(params?: {
+    role?: string;
+    isActive?: boolean;
+    department?: string;
+  }): Promise<User[]> {
+    const { data } = await api.get("/users", { params });
     return data;
   },
 
@@ -13,7 +17,7 @@ export const userService = {
   },
 
   async create(payload: CreateUserPayload): Promise<User> {
-    const { data } = await api.post('/users', payload);
+    const { data } = await api.post("/users", payload);
     return data;
   },
 
@@ -22,7 +26,6 @@ export const userService = {
     return data;
   },
 
-   
   // Backend : DELETE /users/:id
   async remove(id) {
     const { data } = await api.delete(`/users/${id}`);
@@ -34,24 +37,24 @@ export const userService = {
   //   return data;
   // },
 
-    // Backend attend : PATCH /users/:id/status  { status: 'ACTIVE' | 'INACTIVE' }
+  // Backend attend : PATCH /users/:id/status  { status: 'ACTIVE' | 'INACTIVE' }
   async toggleActive(id, makeActive) {
     const { data } = await api.patch(`/users/${id}/status`, {
-      status: makeActive ? 'ACTIVE' : 'INACTIVE',
+      status: makeActive ? "ACTIVE" : "INACTIVE",
     });
     return data;
   },
   async updateAvatar(id: string, file: File): Promise<User> {
     const form = new FormData();
-    form.append('avatar', file);
+    form.append("avatar", file);
     const { data } = await api.patch(`/users/${id}/avatar`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },
 
   async exportCsv(): Promise<Blob> {
-    const { data } = await api.get('/users/export', { responseType: 'blob' });
+    const { data } = await api.get("/users/export", { responseType: "blob" });
     return data;
   },
 };
