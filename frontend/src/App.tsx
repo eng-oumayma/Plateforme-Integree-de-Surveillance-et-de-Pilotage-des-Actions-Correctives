@@ -1,22 +1,3 @@
-
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import AppLayout from './components/layout/AppLayout';
-import LoginPage from './pages/auth/LoginPage';
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import UsersPage from './pages/admin/UsersPage';
-import ProfilePage from './pages/profile/ProfilePage';
-import DashboardPage from './pages/DashboardPage';
-import ForbiddenPage from './pages/ForbiddenPage';
-import CreateUserPage from './pages/admin/CreateUserPage';
-import SetPasswordPage from './pages/auth/SetPasswordPage';
-import InspectionsListPage from './pages/inspections/InspectionsListPage';
-import CreateInspectionPage from './pages/inspections/CreateInspectionPage';
-import PlanningCalendarPage from './pages/planning/Planningcalendarpage';
-import PlanningConfigPage from './pages/planning/Planningconfigpage';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -31,9 +12,13 @@ import DashboardPage from "./pages/DashboardPage";
 import ForbiddenPage from "./pages/ForbiddenPage";
 import CreateUserPage from "./pages/admin/CreateUserPage";
 import SetPasswordPage from "./pages/auth/SetPasswordPage";
+import InspectionsListPage from "./pages/inspections/InspectionsListPage";
+import CreateInspectionPage from "./pages/inspections/CreateInspectionPage";
+import PlanningCalendarPage from "./pages/planning/Planningcalendarpage";
+import PlanningConfigPage from "./pages/planning/Planningconfigpage";
+
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
-
 
 const theme = createTheme({
   palette: {
@@ -95,7 +80,6 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/admin/users/new"
                 element={
@@ -104,10 +88,10 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-               <Route
+              <Route
                 path="/inspections"
                 element={
-                  <ProtectedRoute allowedRoles={['ADMIN_HSEE', 'AUDITEUR']}>
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
                     <InspectionsListPage />
                   </ProtectedRoute>
                 }
@@ -115,12 +99,12 @@ export default function App() {
               <Route
                 path="/inspections/new"
                 element={
-                  <ProtectedRoute allowedRoles={['ADMIN_HSEE', 'AUDITEUR']}>
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
                     <CreateInspectionPage />
                   </ProtectedRoute>
                 }
               />
-               {/* <Route
+              {/* <Route
                 path="/inspections/:id/edit"
                 element={
                   <ProtectedRoute allowedRoles={['ADMIN_HSEE', 'AUDITEUR']}>
@@ -128,12 +112,11 @@ export default function App() {
                   </ProtectedRoute>
                 }
               /> */}
-
-                 {/* ── Planning 52 semaines (Admin seulement) ── */}
+              {/* ── Planning 52 semaines (Admin seulement) ── */}
               <Route
                 path="/planning"
                 element={
-                  <ProtectedRoute allowedRoles={['ADMIN_HSEE']}>
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE"]}>
                     <PlanningCalendarPage />
                   </ProtectedRoute>
                 }
@@ -141,26 +124,21 @@ export default function App() {
               <Route
                 path="/planning/new"
                 element={
-                  <ProtectedRoute allowedRoles={['ADMIN_HSEE']}>
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE"]}>
                     <PlanningConfigPage />
                   </ProtectedRoute>
                 }
               />
-
-
               {/* Future epics — placeholder */}
-
-            
-
+              
               <Route
                 path="/checklists"
                 element={
-                  <ProtectedRoute allowedRoles={["ADMIN_HSEE"]}>
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
                     <ChecklistTemplatesPage />
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/checklists/builder"
                 element={
@@ -169,7 +147,6 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/checklists/builder/:id"
                 element={
@@ -182,8 +159,6 @@ export default function App() {
               <Route path="/actions" element={<DashboardPage />} />
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
               <Route path="/notifications" element={<DashboardPage />} />
-              
-            
             </Route>
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
