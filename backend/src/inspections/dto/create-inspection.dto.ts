@@ -40,4 +40,16 @@ export class CreateInspectionDto {
   @Min(-180)
   @Max(180)
   longitude?: number;
+
+
+   /**
+   * planId : envoyé uniquement si l'inspection est créée depuis "Réaliser" (MesTaches)
+   * null si inspection libre
+   */
+  @IsOptional()
+  @IsUUID('4', { message: 'planId doit être un UUID valide' })
+  planId?: string;
+  
 }
+
+

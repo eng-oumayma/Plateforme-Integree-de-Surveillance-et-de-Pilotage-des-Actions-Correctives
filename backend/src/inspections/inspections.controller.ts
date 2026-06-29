@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  Req,
 } from '@nestjs/common';
 import { InspectionsService } from './inspections.service';
 import { CreateInspectionDto } from './dto/create-inspection.dto';
@@ -24,24 +25,27 @@ import { InspectionStatus } from '../common/enums/Inspection-status.enum';
 export class InspectionsController {
   constructor(private readonly inspectionsService: InspectionsService) {}
 
-  /**
+ /**
    * POST /inspections
-   * L'auditeur crée une inspection.
-   * Le timestamp est injecté côté serveur (non falsifiable).
+   * L'Auditeur crée une inspection — son ID vient du JWT (req.user.sub)
+   * Il ne fournit PAS auditeurId dans le body
+   * Il peut fournir planId si l'inspection réalise un plan planifié
    */
-  // @Post()
-  // @Roles('ADMIN_HSEE', 'AUDITEUR')
-  // create(@Body() dto: CreateInspectionDto, @Request() req) {
-  //   return this.inspectionsService.create(dto, req.user.sub);
-  // }
   @Post()
   @Roles('ADMIN_HSEE', 'AUDITEUR')
+
+  create(@Body() dto: CreateInspectionDto, @Req() req) {
+     const requesterId   = req.user.userId;
+    const requesterRole = req.user?.role;
+    return this.inspectionsService.create(dto, requesterId, requesterRole);
+
   create(@Body() dto: CreateInspectionDto, @Request() req) {
     return this.inspectionsService.create(
       dto,
       req.user.userId, // ID du connecté
       req.user.role, // rôle du connecté
     );
+
   }
 
   /**
@@ -106,4 +110,25 @@ export class InspectionsController {
   remove(@Param('id') id: string) {
     return this.inspectionsService.remove(id);
   }
+
+
+  /**
+   * PATCH /inspections/:id
+   */
+  // @Patch(':id')
+  // @Roles('ADMIN_HSEE', 'AUDITEUR')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() dto: UpdateInspectionDto,
+  //   @Req() req,
+  // ) {
+  //   return this.inspectionsService.update(
+  //     id, dto,
+  //     req.user?.sub ?? req.user?.id,
+  //     req.user?.role,
+  //   );
+  // }
+
+
 }
+

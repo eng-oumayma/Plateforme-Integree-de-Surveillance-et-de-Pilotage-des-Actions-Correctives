@@ -12,6 +12,11 @@ export const planningService = {
     const { data } = await api.get('/planning', { params });
     return data;
   },
+   // GET /planning/mes-taches  ← NOUVEAU : tâches de l'auditeur connecté
+  async getMesTaches() {
+    const { data } = await api.get('/planning/mes-taches');
+    return data;
+  },
 
   // GET /planning/:id
   async getById(id: string) {
