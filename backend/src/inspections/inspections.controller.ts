@@ -33,10 +33,19 @@ export class InspectionsController {
    */
   @Post()
   @Roles('ADMIN_HSEE', 'AUDITEUR')
+
   create(@Body() dto: CreateInspectionDto, @Req() req) {
      const requesterId   = req.user.userId;
     const requesterRole = req.user?.role;
     return this.inspectionsService.create(dto, requesterId, requesterRole);
+
+  create(@Body() dto: CreateInspectionDto, @Request() req) {
+    return this.inspectionsService.create(
+      dto,
+      req.user.userId, // ID du connecté
+      req.user.role, // rôle du connecté
+    );
+
   }
 
   /**
@@ -102,6 +111,7 @@ export class InspectionsController {
     return this.inspectionsService.remove(id);
   }
 
+
   /**
    * PATCH /inspections/:id
    */
@@ -121,3 +131,4 @@ export class InspectionsController {
 
 
 }
+
