@@ -16,6 +16,8 @@ import InspectionsListPage from "./pages/inspections/InspectionsListPage";
 import CreateInspectionPage from "./pages/inspections/CreateInspectionPage";
 import PlanningCalendarPage from "./pages/planning/Planningcalendarpage";
 import PlanningConfigPage from "./pages/planning/Planningconfigpage";
+import FillChecklistPage from "./pages/admin/checklists/FillChecklistPage";
+import ChecklistResultsPage from "./pages/admin/checklists/ChecklistResultsPage";
 
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
@@ -130,7 +132,7 @@ export default function App() {
                 }
               />
               {/* Future epics — placeholder */}
-              
+
               <Route
                 path="/checklists"
                 element={
@@ -152,6 +154,22 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={["ADMIN_HSEE"]}>
                     <ChecklistBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checklists/fill/:inspectionId/:templateId"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <FillChecklistPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checklists/results/:inspectionId/:templateId"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <ChecklistResultsPage />
                   </ProtectedRoute>
                 }
               />

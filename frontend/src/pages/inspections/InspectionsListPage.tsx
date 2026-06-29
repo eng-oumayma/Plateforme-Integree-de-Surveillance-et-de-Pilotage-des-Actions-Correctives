@@ -21,16 +21,16 @@
 // import { inspectionService } from '../../services/inspectionService';
 
 // const DOMAINES = [
-//   'Plant', 
-//   'Magasin', 
-//   'Sanitaires', 
-//   'Cantine', 
+//   'Plant',
+//   'Magasin',
+//   'Sanitaires',
+//   'Cantine',
 //   'Chimique',
-//   'Locaux_techniques', 
-//   'Déchets', 
-//   'Transport', 
+//   'Locaux_techniques',
+//   'Déchets',
+//   'Transport',
 //   'Infirmerie',
-//   'Recycleurs', 
+//   'Recycleurs',
 //   'Incendie',
 // ];
 
@@ -219,10 +219,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box, Typography, Button, TextField, MenuItem, Select,
-  FormControl, InputLabel, Chip, IconButton, Dialog, DialogTitle, 
-  DialogContent, DialogActions, Alert, CircularProgress, 
-  InputAdornment, Paper
+  Box,
+  Typography,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  Paper,
 } from "@mui/material";
 
 // Icons
@@ -234,44 +248,56 @@ import LocationOffIcon from "@mui/icons-material/LocationOff";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { inspectionService } from "../../services/inspectionService";
 
 // --- Configuration des Domaines (Doit correspondre au backend) ---
 const DOMAINES = [
-  "Plant", "Magasin", "Sanitaires", "Cantine", "Chimique",
-  "Locaux techniques", "Déchets", "Transport", "Infirmerie",
-  "Recycleurs", "Incendie"
+  "Plant",
+  "Magasin",
+  "Sanitaires",
+  "Cantine",
+  "Chimique",
+  "Locaux techniques",
+  "Déchets",
+  "Transport",
+  "Infirmerie",
+  "Recycleurs",
+  "Incendie",
 ];
 
-const STATUS_COLORS: Record<string, "info" | "warning" | "success" | "default"> = {
+const STATUS_COLORS: Record<
+  string,
+  "info" | "warning" | "success" | "default"
+> = {
   EN_COURS: "info",
   TERMINEE: "warning",
-  VALIDEE:  "success",
-  ANNULEE:  "default",
+  VALIDEE: "success",
+  ANNULEE: "default",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   EN_COURS: "En cours",
   TERMINEE: "Terminée",
-  VALIDEE:  "Validée",
-  ANNULEE:  "Annulée",
+  VALIDEE: "Validée",
+  ANNULEE: "Annulée",
 };
 
 export default function InspectionsListPage() {
   const navigate = useNavigate();
   const [inspections, setInspections] = useState<any[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [search, setSearch]           = useState("");
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [domainFilter, setDomainFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [globalError, setGlobalError]   = useState("");
+  const [globalError, setGlobalError] = useState("");
 
   // Targets pour les Dialogues (comme dans UsersPage)
   const [statusTarget, setStatusTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
-  const [updating, setUpdating]         = useState(false);
-  const [deleting, setDeleting]         = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const fetchInspections = useCallback(async () => {
@@ -280,7 +306,7 @@ export default function InspectionsListPage() {
     try {
       const data = await inspectionService.getAll({
         ...(domainFilter && { domaine: domainFilter }),
-        ...(statusFilter && { statut:  statusFilter }),
+        ...(statusFilter && { statut: statusFilter }),
       });
       setInspections(data);
     } catch {
@@ -290,7 +316,9 @@ export default function InspectionsListPage() {
     }
   }, [domainFilter, statusFilter]);
 
-  useEffect(() => { fetchInspections(); }, [fetchInspections]);
+  useEffect(() => {
+    fetchInspections();
+  }, [fetchInspections]);
 
   // ── Filtrage local par recherche textuelle ────────────────────────────────
   const filteredInspections = inspections.filter((i) => {
@@ -311,7 +339,10 @@ export default function InspectionsListPage() {
       setStatusTarget(null);
       fetchInspections();
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Erreur lors de la mise à jour du statut.");
+      alert(
+        err?.response?.data?.message ||
+          "Erreur lors de la mise à jour du statut.",
+      );
     } finally {
       setUpdating(false);
     }
@@ -336,9 +367,18 @@ export default function InspectionsListPage() {
   const handleExportCSV = () => {
     if (filteredInspections.length === 0) return;
 
-    const headers = ["ID", "Domaine", "Site", "Auditeur", "Date Prevue", "Statut", "Latitude", "Longitude"];
-    
-    const rows = filteredInspections.map(i => [
+    const headers = [
+      "ID",
+      "Domaine",
+      "Site",
+      "Auditeur",
+      "Date Prevue",
+      "Statut",
+      "Latitude",
+      "Longitude",
+    ];
+
+    const rows = filteredInspections.map((i) => [
       i.id,
       `"${i.domaine}"`,
       `"${i.site}"`,
@@ -346,12 +386,14 @@ export default function InspectionsListPage() {
       new Date(i.datePrevue).toLocaleDateString("fr-FR"),
       STATUS_LABELS[i.statut] || i.statut,
       i.latitude || "",
-      i.longitude || ""
+      i.longitude || "",
     ]);
 
     // Inclusion du BOM (\uFEFF) pour préserver les accents sous Excel (ex: Déchets)
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    
+    const csvContent =
+      "\uFEFF" +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -363,18 +405,35 @@ export default function InspectionsListPage() {
   return (
     <Box>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="flex-start"
+        mb={3}
+      >
         <Box>
-          <Typography variant="h5" fontWeight={600}>Inspections</Typography>
+          <Typography variant="h5" fontWeight={600}>
+            Inspections
+          </Typography>
           <Typography variant="body2" color="text.secondary">
-            {filteredInspections.length} affichée(s) · {inspections.length} au total
+            {filteredInspections.length} affichée(s) · {inspections.length} au
+            total
           </Typography>
         </Box>
         <Box display="flex" gap={1}>
-          <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportCSV} disabled={filteredInspections.length === 0}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleExportCSV}
+            disabled={filteredInspections.length === 0}
+          >
             Exporter CSV
           </Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/inspections/new")}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/inspections/new")}
+          >
             Nouvelle inspection
           </Button>
         </Box>
@@ -389,26 +448,50 @@ export default function InspectionsListPage() {
           size="small"
           sx={{ minWidth: 280 }}
           InputProps={{
-            startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
           }}
         />
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Domaine</InputLabel>
-          <Select value={domainFilter} label="Domaine" onChange={(e) => setDomainFilter(e.target.value)}>
+          <Select
+            value={domainFilter}
+            label="Domaine"
+            onChange={(e) => setDomainFilter(e.target.value)}
+          >
             <MenuItem value="">Tous les domaines</MenuItem>
-            {DOMAINES.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+            {DOMAINES.map((d) => (
+              <MenuItem key={d} value={d}>
+                {d}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Statut</InputLabel>
-          <Select value={statusFilter} label="Statut" onChange={(e) => setStatusFilter(e.target.value)}>
+          <Select
+            value={statusFilter}
+            label="Statut"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <MenuItem value="">Tous les statuts</MenuItem>
-            {Object.entries(STATUS_LABELS).map(([v, l]) => <MenuItem key={v} value={v}>{l}</MenuItem>)}
+            {Object.entries(STATUS_LABELS).map(([v, l]) => (
+              <MenuItem key={v} value={v}>
+                {l}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
 
-      {globalError && <Alert severity="error" sx={{ mb: 2 }}>{globalError}</Alert>}
+      {globalError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {globalError}
+        </Alert>
+      )}
 
       {/* Liste des Inspections */}
       {loading ? (
@@ -416,16 +499,56 @@ export default function InspectionsListPage() {
           <CircularProgress />
         </Box>
       ) : filteredInspections.length === 0 ? (
-        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", p: 6, textAlign: "center" }}>
-          <Typography color="text.secondary">Aucune inspection trouvée.</Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            p: 6,
+            textAlign: "center",
+          }}
+        >
+          <Typography color="text.secondary">
+            Aucune inspection trouvée.
+          </Typography>
         </Paper>
       ) : (
-        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
+        <Paper
+          elevation={0}
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+          }}
+        >
           {/* Entête du tableau fait maison en CSS Grid */}
-          <Box display="grid" gridTemplateColumns="2fr 1.5fr 1fr 1fr 60px 140px" gap={2}
-            sx={{ px: 2, py: 1.5, bgcolor: "grey.50", borderBottom: "1px solid", borderColor: "divider" }}>
-            {["Domaine", "Site / Auditeur", "Date prévue", "Statut", "GPS", "Actions"].map((h) => (
-              <Typography key={h} variant="caption" fontWeight={600} color="text.secondary" textTransform="uppercase">
+          <Box
+            display="grid"
+            gridTemplateColumns="2fr 1.5fr 1fr 1fr 60px 140px"
+            gap={2}
+            sx={{
+              px: 2,
+              py: 1.5,
+              bgcolor: "grey.50",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            {[
+              "Domaine",
+              "Site / Auditeur",
+              "Date prévue",
+              "Statut",
+              "GPS",
+              "Actions",
+            ].map((h) => (
+              <Typography
+                key={h}
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+                textTransform="uppercase"
+              >
                 {h}
               </Typography>
             ))}
@@ -440,7 +563,8 @@ export default function InspectionsListPage() {
               gap={2}
               alignItems="center"
               sx={{
-                px: 2, py: 1.5,
+                px: 2,
+                py: 1.5,
                 borderBottom: "0.5px solid",
                 borderColor: "divider",
                 "&:last-child": { borderBottom: "none" },
@@ -449,9 +573,13 @@ export default function InspectionsListPage() {
             >
               {/* Domaine */}
               <Box>
-                <Typography variant="body2" fontWeight={500}>{inspection.domaine}</Typography>
+                <Typography variant="body2" fontWeight={500}>
+                  {inspection.domaine}
+                </Typography>
                 {inspection.checklist && (
-                  <Typography variant="caption" color="text.secondary">{inspection.checklist.titre}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {inspection.checklist.titre}
+                  </Typography>
                 )}
               </Box>
 
@@ -459,7 +587,9 @@ export default function InspectionsListPage() {
               <Box>
                 <Typography variant="body2">{inspection.site}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {inspection.auditeur ? `${inspection.auditeur.firstName} ${inspection.auditeur.lastName}` : "Aucun auditeur"}
+                  {inspection.auditeur
+                    ? `${inspection.auditeur.firstName} ${inspection.auditeur.lastName}`
+                    : "Aucun auditeur"}
                 </Typography>
               </Box>
 
@@ -478,27 +608,62 @@ export default function InspectionsListPage() {
               </Box>
 
               {/* GPS (Utilisation du titre HTML natif sans Popper) */}
-              <Box 
-                display="flex" 
+              <Box
+                display="flex"
                 alignItems="center"
-                title={inspection.latitude ? `${inspection.latitude.toFixed(4)}, ${inspection.longitude.toFixed(4)}` : "Pas de géolocalisation"}
-              >
-                {inspection.latitude 
-                  ? <LocationOnIcon sx={{ fontSize: 20, color: "success.main" }} />
-                  : <LocationOffIcon sx={{ fontSize: 20, color: "text.disabled" }} />
+                title={
+                  inspection.latitude
+                    ? `${inspection.latitude.toFixed(4)}, ${inspection.longitude.toFixed(4)}`
+                    : "Pas de géolocalisation"
                 }
+              >
+                {inspection.latitude ? (
+                  <LocationOnIcon
+                    sx={{ fontSize: 20, color: "success.main" }}
+                  />
+                ) : (
+                  <LocationOffIcon
+                    sx={{ fontSize: 20, color: "text.disabled" }}
+                  />
+                )}
               </Box>
 
               {/* Boutons d'actions directs et épurés */}
               <Box display="flex" gap={0.5} alignItems="center">
-                <IconButton size="small" onClick={() => navigate(`/inspections/${inspection.id}`)} title="Ouvrir">
+                <IconButton
+                  size="small"
+                  onClick={() => navigate(`/inspections/${inspection.id}`)}
+                  title="Ouvrir"
+                >
                   <OpenInNewIcon fontSize="small" />
                 </IconButton>
-                <IconButton size="small" color="primary" onClick={() => setStatusTarget(inspection)} title="Changer statut">
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={() => setStatusTarget(inspection)}
+                  title="Changer statut"
+                >
                   <AutorenewIcon fontSize="small" />
                 </IconButton>
-                <IconButton size="small" color="error" onClick={() => setDeleteTarget(inspection)} title="Supprimer">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => setDeleteTarget(inspection)}
+                  title="Supprimer"
+                >
                   <DeleteIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={() =>
+                    navigate(
+                      `/checklists/results/${inspection.id}/${inspection?.checklistTemplateId}`,
+                    )
+                  }
+                  title="Voir résultats"
+                >
+                  <CheckCircleIcon fontSize="small" />
                 </IconButton>
               </Box>
             </Box>
@@ -507,11 +672,17 @@ export default function InspectionsListPage() {
       )}
 
       {/* ── Dialogue : Modification rapide du Statut ── */}
-      <Dialog open={!!statusTarget} onClose={() => setStatusTarget(null)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={!!statusTarget}
+        onClose={() => setStatusTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>Changer le statut de l'inspection</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Typography variant="body2" mb={2} color="text.secondary">
-            Sélectionnez le nouveau statut pour l'inspection du domaine <strong>{statusTarget?.domaine}</strong> ({statusTarget?.site}) :
+            Sélectionnez le nouveau statut pour l'inspection du domaine{" "}
+            <strong>{statusTarget?.domaine}</strong> ({statusTarget?.site}) :
           </Typography>
           <FormControl fullWidth size="small">
             <InputLabel>Nouveau statut</InputLabel>
@@ -522,7 +693,11 @@ export default function InspectionsListPage() {
               disabled={updating}
             >
               {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                <MenuItem key={value} value={value} disabled={statusTarget?.statut === value}>
+                <MenuItem
+                  key={value}
+                  value={value}
+                  disabled={statusTarget?.statut === value}
+                >
                   {label}
                 </MenuItem>
               ))}
@@ -530,23 +705,45 @@ export default function InspectionsListPage() {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setStatusTarget(null)} disabled={updating}>Annuler</Button>
+          <Button onClick={() => setStatusTarget(null)} disabled={updating}>
+            Annuler
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* ── Dialogue : Confirmation de Suppression ── */}
-      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ color: "error.main" }}>Supprimer l'inspection</DialogTitle>
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: "error.main" }}>
+          Supprimer l'inspection
+        </DialogTitle>
         <DialogContent>
-          <Alert severity="error" sx={{ mb: 2 }}>Cette opération est définitive.</Alert>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Cette opération est définitive.
+          </Alert>
           <Typography variant="body2">
-            Supprimer définitivement l'inspection <strong>{deleteTarget?.domaine}</strong> sur le site de <strong>{deleteTarget?.site}</strong> ?
+            Supprimer définitivement l'inspection{" "}
+            <strong>{deleteTarget?.domaine}</strong> sur le site de{" "}
+            <strong>{deleteTarget?.site}</strong> ?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteTarget(null)}>Annuler</Button>
-          <Button onClick={handleDelete} variant="contained" color="error" disabled={deleting}>
-            {deleting ? <CircularProgress size={20} color="inherit" /> : "Supprimer"}
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+          >
+            {deleting ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Supprimer"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
