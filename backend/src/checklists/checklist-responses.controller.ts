@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -23,7 +24,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../users/enums/role.enum';
-
+import express from 'express';
 // Créer le dossier uploads si absent
 const uploadsDir = './uploads/checklists';
 if (!fs.existsSync(uploadsDir)) {
@@ -108,5 +109,34 @@ export class ChecklistResponsesController {
   @Delete('photo/:photoId')
   removePhoto(@Param('photoId') photoId: string) {
     return this.service.removePhoto(photoId);
+  }
+  // GET /api/inspections/:id/checklist
+  // Réponse complète : items + cotations + score + déviations
+  @Get('inspection/:inspectionId/full/:templateId')
+  getFullResult(
+    @Param('inspectionId') inspectionId: string,
+    @Param('templateId') templateId: string,
+  ) {
+    return this.service.getFullResult(inspectionId, templateId);
+  }
+  // GET /api/checklist-responses/inspection/:inspectionId/pdf/:templateId
+  // Générer et télécharger le PDF
+  @Get('inspection/:inspectionId/pdf/:templateId')
+  async exportPdf(
+    @Param('inspectionId') inspectionId: string,
+    @Param('templateId') templateId: string,
+    @Res() res: express.Response,
+  ) {
+    const buffer = await this.service.generatePdf(inspectionId, templateId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="rapport-checklist-${inspectionId}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
+  @Get('score-history/:domaine')
+  getScoreHistory(@Param('domaine') domaine: string) {
+    return this.service.getScoreHistory(domaine);
   }
 }
