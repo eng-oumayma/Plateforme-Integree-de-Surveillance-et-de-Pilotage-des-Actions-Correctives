@@ -10,6 +10,8 @@ import {
 import { Domaine } from '../common/enums/domaine.enum';
 import { InspectionStatus } from '../common/enums/Inspection-status.enum';
 import { User } from '../users/user.entity';
+import { IsUUID } from 'class-validator/types/decorator/string/IsUUID';
+import { IsOptional } from 'class-validator/types/decorator/common/IsOptional';
 
 @Entity('inspections')
 export class Inspection {
@@ -60,4 +62,48 @@ export class Inspection {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @Column({ type: 'uuid', nullable: true })
+  // @IsUUID('4', { message: 'planId doit être un UUID valide' })
+  planId?: string;
+
+
+
+
+
+   
+  // ── Champs de clôture (US7) ──────────────────────────────────────────────
+ 
+  /** ID de l'auditeur qui a clôturé */
+  @Column({ nullable: true })
+  closedById: string | null;
+ 
+  @ManyToOne(() => User, { eager: false, nullable: true })
+  @JoinColumn({ name: 'closedById' })
+  closedBy: User;
+ 
+  /** Date/heure de clôture */
+  @Column({ type: 'timestamp', nullable: true })
+  closedAt: Date | null;
+ 
+  /** Durée de l'inspection en minutes (closedAt - timestamp) */
+  @Column({ type: 'int', nullable: true })
+  durationMinutes: number | null;
+ 
+  /** Score checklist (0-100) calculé à la clôture */
+  @Column({ type: 'float', nullable: true })
+  score: number | null;
+ 
+  /** Nombre de questions répondues à la clôture */
+  @Column({ type: 'int', nullable: true })
+  itemsAnswered: number | null;
+ 
+  /** Nombre total de questions de la checklist */
+  @Column({ type: 'int', nullable: true })
+  itemsTotal: number | null;
+ 
+  /** Nombre d'anomalies détectées */
+  @Column({ type: 'int', nullable: true, default: 0 })
+  anomaliesCount: number | null;
+ 
 }

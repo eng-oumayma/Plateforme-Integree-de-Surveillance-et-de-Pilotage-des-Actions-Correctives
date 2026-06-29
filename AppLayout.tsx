@@ -32,7 +32,6 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -41,6 +40,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../../contexts/AuthContext";
 import InactivityDialog from "../common/InactivityDialog";
 
+// ─── Constants ───────────────────────────────────────────────────────────────
 const DRAWER_WIDTH = 256;
 
 const ROLE_LABELS: Record<string, string> = {
@@ -55,8 +55,10 @@ const ROLE_COLORS: Record<string, "primary" | "success" | "warning"> = {
   PILOTE_ACTION: "warning",
 };
 
+// ─── Navigation structure ─────────────────────────────────────────────────────
+// type: 'item' | 'group' | 'divider'
+// roles: qui peut voir cet élément
 const NAV_STRUCTURE: any[] = [
-  // ── Commun ──────────────────────────────────────────────────────────────
   {
     type: "item",
     label: "Tableau de bord",
@@ -65,21 +67,7 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
   },
 
-  // ── Section Auditeur : MES TÂCHES ────────────────────────────────────────
-  {
-    type: "divider",
-    label: "MES TÂCHES",
-    roles: ["AUDITEUR"],
-  },
-  {
-    type: "item",
-    label: "Mes inspections",
-    Icon: TaskAltIcon,
-    path: "/mes-taches",
-    roles: ["AUDITEUR"],
-  },
-
-  // ── Section SURVEILLANCE (Admin + Auditeur) ──────────────────────────────
+  // ── SURVEILLANCE ──────────────────────────────────────────────────────────
   {
     type: "divider",
     label: "SURVEILLANCE",
@@ -93,14 +81,17 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE", "AUDITEUR"],
   },
   {
-    // Planning : Admin voit le groupe, Auditeur ne voit rien ici
     type: "group",
     label: "Planning",
     Icon: CalendarMonthIcon,
     roles: ["ADMIN_HSEE"],
     children: [
       { label: "Calendrier 52 sem.", Icon: EventRepeatIcon, path: "/planning" },
-      { label: "Nouveau plan", Icon: AddCircleOutlineIcon, path: "/planning/new" },
+      {
+        label: "Nouveau plan",
+        Icon: AddCircleOutlineIcon,
+        path: "/planning/new",
+      },
     ],
   },
   {
@@ -118,7 +109,7 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE", "AUDITEUR"],
   },
 
-  // ── Section ACTIONS ──────────────────────────────────────────────────────
+  // ── ACTIONS ───────────────────────────────────────────────────────────────
   {
     type: "divider",
     label: "ACTIONS",
@@ -132,7 +123,7 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
   },
 
-  // ── Section ADMINISTRATION (Admin seulement) ─────────────────────────────
+  // ── ADMINISTRATION ────────────────────────────────────────────────────────
   {
     type: "divider",
     label: "ADMINISTRATION",
@@ -153,7 +144,7 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE"],
   },
 
-  // ── Section SYSTÈME ──────────────────────────────────────────────────────
+  // ── SYSTÈME ───────────────────────────────────────────────────────────────
   {
     type: "divider",
     label: "SYSTÈME",
@@ -168,9 +159,9 @@ const NAV_STRUCTURE: any[] = [
   },
 ];
 
+// Breadcrumb map path → label
 const BREADCRUMB_MAP: Record<string, string> = {
   "/dashboard": "Tableau de bord",
-  "/mes-taches": "Mes inspections à réaliser",
   "/inspections": "Inspections",
   "/planning": "Planning 52 semaines",
   "/checklists": "Checklists",
@@ -182,6 +173,7 @@ const BREADCRUMB_MAP: Record<string, string> = {
   "/profile": "Mon profil",
 };
 
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -193,6 +185,7 @@ export default function AppLayout() {
     Planning: false,
   });
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
 
@@ -208,7 +201,7 @@ export default function AppLayout() {
 
   const currentBreadcrumb =
     Object.entries(BREADCRUMB_MAP).find(([path]) =>
-      location.pathname.startsWith(path)
+      location.pathname.startsWith(path),
     )?.[1] ?? "";
 
   const handleLogout = () => {
@@ -221,11 +214,29 @@ export default function AppLayout() {
   const drawerContent = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Logo */}
-      <Box sx={{ px: 2.5, py: 2, borderBottom: "1px solid", borderColor: "divider" }}>
-        <Typography variant="h6" fontWeight={700} color="primary" letterSpacing={-0.5}>
+      <Box
+        sx={{
+          px: 2.5,
+          py: 2,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          color="primary"
+          letterSpacing={-0.5}
+        >
           HSEE
-          <Typography component="span" variant="h6" fontWeight={400} color="text.secondary">
-            {" "}Platform
+          <Typography
+            component="span"
+            variant="h6"
+            fontWeight={400}
+            color="text.secondary"
+          >
+            {" "}
+            Platform
           </Typography>
         </Typography>
         <Typography variant="caption" color="text.secondary">
@@ -233,15 +244,19 @@ export default function AppLayout() {
         </Typography>
       </Box>
 
-      {/* Nav */}
+      {/* Nav items */}
       <List sx={{ flex: 1, pt: 1, px: 1, overflowY: "auto" }}>
         {NAV_STRUCTURE.map((item: any, idx: number) => {
+          // Masquer si rôle non autorisé
           if (!user || !item.roles?.includes(user.role)) return null;
 
-          // Séparateur
+          // ── Séparateur de section ──────────────────────────────────────
           if (item.type === "divider") {
             return (
-              <Box key={`div-${idx}`} sx={{ px: 1.5, pt: idx === 0 ? 0.5 : 1.5, pb: 0.5 }}>
+              <Box
+                key={`div-${idx}`}
+                sx={{ px: 1.5, pt: idx === 0 ? 0.5 : 1.5, pb: 0.5 }}
+              >
                 <Typography
                   variant="caption"
                   fontWeight={700}
@@ -254,11 +269,13 @@ export default function AppLayout() {
             );
           }
 
-          // Groupe dépliable
+          // ── Groupe dépliable ───────────────────────────────────────────
           if (item.type === "group") {
             const { Icon } = item;
             const isOpen = openGroups[item.label] ?? false;
-            const anyChildActive = item.children?.some((c: any) => isActive(c.path));
+            const anyChildActive = item.children?.some((c: any) =>
+              isActive(c.path),
+            );
             return (
               <Box key={`group-${idx}`}>
                 <ListItemButton
@@ -266,14 +283,26 @@ export default function AppLayout() {
                   selected={anyChildActive}
                   sx={{ borderRadius: 1.5, mb: 0.25 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36, color: anyChildActive ? "primary.main" : "text.secondary" }}>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 36,
+                      color: anyChildActive ? "primary.main" : "text.secondary",
+                    }}
+                  >
                     <Icon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
-                    primaryTypographyProps={{ fontSize: 14, fontWeight: anyChildActive ? 600 : 400 }}
+                    primaryTypographyProps={{
+                      fontSize: 14,
+                      fontWeight: anyChildActive ? 600 : 400,
+                    }}
                   />
-                  {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                  {isOpen ? (
+                    <ExpandLessIcon fontSize="small" />
+                  ) : (
+                    <ExpandMoreIcon fontSize="small" />
+                  )}
                 </ListItemButton>
 
                 <Collapse in={isOpen} timeout="auto" unmountOnExit>
@@ -285,15 +314,26 @@ export default function AppLayout() {
                         <ListItemButton
                           key={child.path}
                           selected={active}
-                          onClick={() => { navigate(child.path); setMobileOpen(false); }}
+                          onClick={() => {
+                            navigate(child.path);
+                            setMobileOpen(false);
+                          }}
                           sx={{ borderRadius: 1.5, mb: 0.25, py: 0.75 }}
                         >
-                          <ListItemIcon sx={{ minWidth: 30, color: active ? "primary.main" : "text.secondary" }}>
+                          <ListItemIcon
+                            sx={{
+                              minWidth: 30,
+                              color: active ? "primary.main" : "text.secondary",
+                            }}
+                          >
                             <ChildIcon sx={{ fontSize: 18 }} />
                           </ListItemIcon>
                           <ListItemText
                             primary={child.label}
-                            primaryTypographyProps={{ fontSize: 13, fontWeight: active ? 600 : 400 }}
+                            primaryTypographyProps={{
+                              fontSize: 13,
+                              fontWeight: active ? 600 : 400,
+                            }}
                           />
                         </ListItemButton>
                       );
@@ -304,43 +344,73 @@ export default function AppLayout() {
             );
           }
 
-          // Item simple
+          // ── Item simple ────────────────────────────────────────────────
           const { Icon } = item;
           const active = isActive(item.path);
           return (
             <ListItemButton
-              key={`${item.path}-${idx}`}
+              key={item.path}
               selected={active}
-              onClick={() => { navigate(item.path); setMobileOpen(false); }}
+              onClick={() => {
+                navigate(item.path);
+                setMobileOpen(false);
+              }}
               sx={{ borderRadius: 1.5, mb: 0.25 }}
             >
-              <ListItemIcon sx={{ minWidth: 36, color: active ? "primary.main" : "text.secondary" }}>
+              <ListItemIcon
+                sx={{
+                  minWidth: 36,
+                  color: active ? "primary.main" : "text.secondary",
+                }}
+              >
                 <Icon fontSize="small" />
               </ListItemIcon>
               <ListItemText
                 primary={item.label}
-                primaryTypographyProps={{ fontSize: 14, fontWeight: active ? 600 : 400 }}
+                primaryTypographyProps={{
+                  fontSize: 14,
+                  fontWeight: active ? 600 : 400,
+                }}
               />
             </ListItemButton>
           );
         })}
       </List>
 
-      {/* User card */}
+      {/* User card en bas — clique pour ouvrir le dialog profil */}
       {user && (
         <Box
           onClick={() => setProfileOpen(true)}
-          sx={{ p: 2, borderTop: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
+          sx={{
+            p: 2,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            cursor: "pointer",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
         >
           <Box display="flex" alignItems="center" gap={1.5}>
-            <Avatar src={user.avatarUrl} sx={{ width: 36, height: 36, bgcolor: "primary.main", fontSize: 13 }}>
+            <Avatar
+              src={user.avatarUrl}
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: "primary.main",
+                fontSize: 13,
+              }}
+            >
               {initials}
             </Avatar>
             <Box flex={1} minWidth={0}>
               <Typography variant="body2" fontWeight={600} noWrap>
                 {user.firstName} {user.lastName}
               </Typography>
-              <Chip label={roleLabel} size="small" color={roleColor as any} sx={{ height: 18, fontSize: 10 }} />
+              <Chip
+                label={roleLabel}
+                size="small"
+                color={roleColor as any}
+                sx={{ height: 18, fontSize: 10 }}
+              />
             </Box>
           </Box>
         </Box>
@@ -348,6 +418,7 @@ export default function AppLayout() {
     </Box>
   );
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       {/* Sidebar Desktop */}
@@ -355,7 +426,12 @@ export default function AppLayout() {
         variant="permanent"
         sx={{
           display: { xs: "none", md: "block" },
-          "& .MuiDrawer-paper": { width: DRAWER_WIDTH, boxSizing: "border-box", borderRight: "1px solid", borderColor: "divider" },
+          "& .MuiDrawer-paper": {
+            width: DRAWER_WIDTH,
+            boxSizing: "border-box",
+            borderRight: "1px solid",
+            borderColor: "divider",
+          },
         }}
       >
         {drawerContent}
@@ -376,33 +452,68 @@ export default function AppLayout() {
       </Drawer>
 
       {/* Zone principale */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", ml: { md: `${DRAWER_WIDTH}px` }, minWidth: 0 }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          ml: { md: `${DRAWER_WIDTH}px` },
+          minWidth: 0,
+        }}
+      >
         {/* AppBar */}
-        <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
+        <AppBar
+          position="static"
+          color="inherit"
+          elevation={0}
+          sx={{ borderBottom: "1px solid", borderColor: "divider" }}
+        >
           <Toolbar>
-            <IconButton sx={{ display: { md: "none" }, mr: 1 }} onClick={() => setMobileOpen(true)}>
+            {/* Burger mobile */}
+            <IconButton
+              sx={{ display: { md: "none" }, mr: 1 }}
+              onClick={() => setMobileOpen(true)}
+            >
               <MenuIcon />
             </IconButton>
 
+            {/* Breadcrumb */}
             {currentBreadcrumb && (
-              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ display: { xs: "none", sm: "block" } }}
+              >
                 {currentBreadcrumb}
               </Typography>
             )}
 
             <Box flex={1} />
 
+            {/* Bouton notifications (badge) */}
             <Tooltip title="Notifications">
-              <IconButton onClick={() => navigate("/notifications")} sx={{ mr: 0.5 }}>
+              <IconButton
+                onClick={() => navigate("/notifications")}
+                sx={{ mr: 0.5 }}
+              >
                 <Badge badgeContent={0} color="error">
                   <NotificationsIcon fontSize="small" />
                 </Badge>
               </IconButton>
             </Tooltip>
 
+            {/* Avatar → ouvre dialog profil */}
             <Tooltip title="Mon profil">
               <IconButton onClick={() => setProfileOpen(true)} size="small">
-                <Avatar src={user?.avatarUrl} sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: 12 }}>
+                <Avatar
+                  src={user?.avatarUrl}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "primary.main",
+                    fontSize: 12,
+                  }}
+                >
                   {initials}
                 </Avatar>
               </IconButton>
@@ -416,11 +527,24 @@ export default function AppLayout() {
         </Box>
       </Box>
 
-      {/* Dialog profil */}
-      <Dialog open={profileOpen} onClose={() => setProfileOpen(false)} maxWidth="xs" fullWidth>
+      {/* ── Dialog profil ── */}
+      <Dialog
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle sx={{ pb: 1 }}>
           <Box display="flex" alignItems="center" gap={2}>
-            <Avatar src={user?.avatarUrl} sx={{ width: 48, height: 48, bgcolor: "primary.main", fontSize: 18 }}>
+            <Avatar
+              src={user?.avatarUrl}
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: "primary.main",
+                fontSize: 18,
+              }}
+            >
               {initials}
             </Avatar>
             <Box>
@@ -431,7 +555,12 @@ export default function AppLayout() {
                 {user?.email}
               </Typography>
               <Box mt={0.5}>
-                <Chip label={roleLabel} size="small" color={roleColor as any} sx={{ height: 18, fontSize: 10 }} />
+                <Chip
+                  label={roleLabel}
+                  size="small"
+                  color={roleColor as any}
+                  sx={{ height: 18, fontSize: 10 }}
+                />
               </Box>
             </Box>
           </Box>
@@ -442,7 +571,10 @@ export default function AppLayout() {
         <DialogContent sx={{ py: 1, px: 2 }}>
           <ListItemButton
             sx={{ borderRadius: 1.5 }}
-            onClick={() => { setProfileOpen(false); navigate("/profile"); }}
+            onClick={() => {
+              setProfileOpen(false);
+              navigate("/profile");
+            }}
           >
             <ListItemIcon sx={{ minWidth: 36 }}>
               <AccountCircleIcon fontSize="small" />
@@ -454,8 +586,15 @@ export default function AppLayout() {
         <Divider />
 
         <DialogActions sx={{ px: 2, py: 1.5 }}>
-          <Button onClick={() => setProfileOpen(false)} color="inherit">Fermer</Button>
-          <Button onClick={handleLogout} variant="contained" color="error" startIcon={<LogoutIcon />}>
+          <Button onClick={() => setProfileOpen(false)} color="inherit">
+            Fermer
+          </Button>
+          <Button
+            onClick={handleLogout}
+            variant="contained"
+            color="error"
+            startIcon={<LogoutIcon />}
+          >
             Se déconnecter
           </Button>
         </DialogActions>

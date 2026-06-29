@@ -21,6 +21,7 @@ import ChecklistResultsPage from "./pages/admin/checklists/ChecklistResultsPage"
 
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
+import MesTachesPage from "./pages/planning/MesTachesPage";
 
 const theme = createTheme({
   palette: {
@@ -131,6 +132,20 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
+
+
+
+             
+
+            <Route
+              path="/mes-taches"
+              element={
+                <ProtectedRoute allowedRoles={['AUDITEUR']}>
+                  <MesTachesPage />
+                </ProtectedRoute>
+              }
+            />
               {/* Future epics — placeholder */}
 
               <Route

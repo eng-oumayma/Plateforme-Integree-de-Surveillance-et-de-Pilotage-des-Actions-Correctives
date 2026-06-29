@@ -9,9 +9,10 @@ import {
   Query,
   UseGuards,
   Res,
+  Req,
   UploadedFile,
   UseInterceptors,
-  ParseIntPipe,
+  ParseIntPipe
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PlanningService } from './planning.service';
@@ -53,6 +54,42 @@ export class PlanningController {
     return this.planningService.findAll({ annee, domaine, statut, site });
   }
 
+
+
+  /**
+ * GET /planning/mes-taches
+ * Auditeur : retourne uniquement SES tâches (responsableId = req.user.sub)
+ * Pas accès au planning global
+ */
+ @Get('mes-taches')
+  @Roles('AUDITEUR', 'ADMIN_HSEE')
+  getMesTaches(@Req() req) {
+
+      const userId: string = req.user.userId;
+    console.log('[planning/mes-taches] userId résolu:', userId, '| req.user:', req.user);
+    return this.planningService.getMesTaches(userId);
+  }
+
+
+  /**
+   * GET /planning/export/csv?annee=2025
+   * Export CSV du plan annuel — avec BOM UTF-8 pour Excel
+   */
+  @Get('export/csv')
+  @Roles('ADMIN_HSEE')
+  async exportCsv(
+    @Query('annee', ParseIntPipe) annee: number,
+    @Res() res,
+  ) {
+    const csv = await this.planningService.exportCsv(annee);
+    const filename = `plan-surveillance-${annee}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send('\uFEFF' + csv);
+  }
+
+  
+
   /**
    * GET /planning/:id
    */
@@ -81,22 +118,7 @@ export class PlanningController {
     return this.planningService.remove(id);
   }
 
-  /**
-   * GET /planning/export/csv?annee=2025
-   * Export CSV du plan annuel — avec BOM UTF-8 pour Excel
-   */
-  @Get('export/csv')
-  @Roles('ADMIN_HSEE')
-  async exportCsv(
-    @Query('annee', ParseIntPipe) annee: number,
-    @Res() res,
-  ) {
-    const csv = await this.planningService.exportCsv(annee);
-    const filename = `plan-surveillance-${annee}.csv`;
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send('\uFEFF' + csv);
-  }
+  
 
   /**
    * POST /planning/import/csv?annee=2025
@@ -124,3 +146,8 @@ export class PlanningController {
     return { message: `${count} plan(s) passé(s) EN_RETARD` };
   }
 }
+
+
+
+
+
