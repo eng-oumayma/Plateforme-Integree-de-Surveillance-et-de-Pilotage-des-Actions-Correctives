@@ -256,4 +256,24 @@ export class PlanningService {
     ].join(';'));
     return [header, ...rows].join('\n');
   }
+
+
+
+
+  async getMesTaches(responsableId: string): Promise<PlanSurveillance[]> {
+    const annee = new Date().getFullYear();
+  
+    return this.repo.find({
+      where: [
+        // Tâches planifiées (toutes semaines — passées, courante, futures)
+        { responsableId, annee, statut: PlanStatut.PLANIFIE },
+        // Tâches en retard
+        { responsableId, annee, statut: PlanStatut.EN_RETARD },
+        // 5 dernières réalisées (pour l'historique)
+        { responsableId, annee, statut: PlanStatut.REALISE },
+      ],
+      relations: { responsable: true },
+      order: { semaine: 'ASC' },
+    });
+  }
 }

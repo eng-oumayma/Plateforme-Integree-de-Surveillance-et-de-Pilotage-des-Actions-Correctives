@@ -56,7 +56,7 @@ export class UsersController {
   //}
 
 @Get()
-@Roles(Role.ADMIN_HSEE)
+@Roles(Role.ADMIN_HSEE, Role.AUDITEUR)
 findAll(@Query('role') role?: string) {
   return this.usersService.findAll({ role });
 }
