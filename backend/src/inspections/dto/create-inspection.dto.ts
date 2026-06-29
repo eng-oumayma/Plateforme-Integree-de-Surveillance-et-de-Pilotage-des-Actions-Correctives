@@ -13,21 +13,19 @@ import { Domaine } from '../../common/enums/domaine.enum';
 
 export class CreateInspectionDto {
   @IsEnum(Domaine, { message: 'Domaine invalide' })
-  domaine: Domaine;
+  domaine!: Domaine;
 
-
-
-   // auditeurId envoyé par le frontend (Admin choisit l'auditeur)
+  // auditeurId envoyé par le frontend (Admin choisit l'auditeur)
   @IsOptional()
   @IsUUID('4', { message: 'auditeurId doit être un UUID valide' })
   auditeurId?: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Le site est requis' })
-  site: string;
+  site!: string;
 
   @IsDateString({}, { message: 'Format de date invalide' })
-  datePrevue: string;
+  datePrevue!: string;
 
   /** Latitude fournie par le navigateur (optionnel) */
   @IsOptional()

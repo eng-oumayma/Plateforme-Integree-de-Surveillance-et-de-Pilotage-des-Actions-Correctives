@@ -35,14 +35,14 @@ export class InspectionsController {
   //   return this.inspectionsService.create(dto, req.user.sub);
   // }
   @Post()
-@Roles('ADMIN_HSEE', 'AUDITEUR')
-create(@Body() dto: CreateInspectionDto, @Request() req) {
-  return this.inspectionsService.create(
-    dto,
-    req.user.sub,   // ID du connecté
-    req.user.role,  // rôle du connecté
-  );
-}
+  @Roles('ADMIN_HSEE', 'AUDITEUR')
+  create(@Body() dto: CreateInspectionDto, @Request() req) {
+    return this.inspectionsService.create(
+      dto,
+      req.user.userId, // ID du connecté
+      req.user.role, // rôle du connecté
+    );
+  }
 
   /**
    * GET /inspections
