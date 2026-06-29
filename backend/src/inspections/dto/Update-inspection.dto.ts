@@ -5,4 +5,6 @@ export class UpdateInspectionDto {
   @IsOptional()
   @IsEnum(InspectionStatus, { message: 'Statut invalide' })
   statut?: InspectionStatus;
+  domaine: any;
+  site: any;
 }

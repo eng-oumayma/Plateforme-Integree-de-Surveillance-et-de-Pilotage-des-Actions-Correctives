@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,12 +11,16 @@ import { CreateInspectionDto } from './dto/create-inspection.dto';
 import { UpdateInspectionDto } from './dto/Update-inspection.dto';
 import { InspectionStatus } from '../common/enums/Inspection-status.enum';
 import { Domaine } from '../common/enums/domaine.enum';
+import { PlanningService } from 'src/planning/planning.service';
+import { PlanStatut } from 'src/common/enums/Plan-statut.enum';
+import { CloseInspectionDto } from './dto/Close-inspection.dto';
 
 @Injectable()
 export class InspectionsService {
   constructor(
     @InjectRepository(Inspection)
     private readonly repo: Repository<Inspection>,
+    private readonly planningService: PlanningService,
   ) {}
 
 async create(
@@ -43,9 +48,66 @@ async create(
   });
  
   const saved = await this.repo.save(inspection);
+    // ── Lier automatiquement au plan si planId fourni ────────────────────
+  if (dto.planId) {
+    await this.planningService.update(dto.planId, {
+      
+      inspectionId: saved.id,
+    });
+  }
+
+
   return this.findOne(saved.id);
 }
 
+
+
+ 
+  // ── Clôturer une inspection (US7) ─────────────────────────────────────────
+  async close(id: string, dto: CloseInspectionDto, requesterId: string): Promise<Inspection> {
+    const inspection = await this.findOne(id);
+ 
+    if (inspection.auditeurId !== requesterId) {
+      throw new ForbiddenException("Seul l'auditeur responsable peut clôturer cette inspection");
+    }
+ 
+    if (inspection.statut !== InspectionStatus.EN_COURS) {
+      throw new BadRequestException(
+        `Impossible de clôturer une inspection avec le statut "${inspection.statut}"`,
+      );
+    }
+ 
+    // ── Vérification checklist (Epic 3 — à activer quand les réponses existent) ──
+    // const responses = await this.checklistResponseRepo.count({ where: { inspectionId: id, answered: true } });
+    // const total     = await this.checklistItemRepo.count({ where: { templateId: inspection.checklistId } });
+    // if (responses < total) throw new BadRequestException(`Checklist incomplète : ${responses}/${total} réponses`);
+ 
+    const now             = new Date();
+    const durationMinutes = Math.round((now.getTime() - inspection.timestamp.getTime()) / 60000);
+ 
+    inspection.statut          = InspectionStatus.TERMINEE;  // ✅ TERMINEE à la clôture
+    inspection.closedById      = requesterId;
+    inspection.closedAt        = now;
+    inspection.dateRealise     = now;
+    inspection.durationMinutes = durationMinutes;
+ 
+    const closed = await this.repo.save(inspection);
+ 
+    // ✅ C'est ici qu'on met à jour le plan (inspection terminée = plan réalisé)
+    if (inspection.planId) {
+      try {
+        await this.planningService.update(inspection.planId, {
+          statut:       PlanStatut.REALISE,
+          inspectionId: closed.id,
+        });
+      } catch (e) {
+        console.warn(`[close] Impossible de lier le plan ${inspection.planId}:`, e.message);
+      }
+    }
+ 
+    return this.findOne(closed.id);
+  }
+ 
   // ── Lister les inspections ────────────────────────────────────────────────
   async findAll(options: {
     auditeurId?: string;
@@ -144,7 +206,7 @@ async create(
     if (dto.statut) {
       inspection.statut = dto.statut;
       // Horodater la fin si on passe à TERMINEE
-      if (dto.statut === InspectionStatus.TERMINEE) {
+      if (dto.statut ===InspectionStatus.TERMINEE ) {         //InspectionStatus.REALISE
         inspection.dateRealise = new Date();
       }
     }
@@ -160,4 +222,26 @@ async create(
       message: `✅ Inspection #${id} (${inspection.domaine} - ${inspection.site}) supprimée`,
     };
   }
+
+
+  // // ── Modifier une inspection ───────────────────────────────────────────────
+  // async update(
+  //   id: string,
+  //   dto: UpdateInspectionDto,
+  //   requesterId: string,
+  //   requesterRole: string,
+  // ): Promise<Inspection> {
+  //   const inspection = await this.findOne(id);
+ 
+  //   if (requesterRole !== 'ADMIN_HSEE' && inspection.auditeurId !== requesterId) {
+  //     throw new ForbiddenException('Vous ne pouvez modifier que vos propres inspections');
+  //   }
+ 
+  //   if (dto.domaine)    inspection.domaine    = dto.domaine;
+  //   if (dto.site)       inspection.site       = dto.site.trim();
+  //   if (dto.datePrevue) inspection.datePrevue = new Date(dto.datePrevue);
+  //   if (dto.statut)     inspection.statut     = dto.statut;
+ 
+  //   return this.repo.save(inspection);
+  // }
 }
