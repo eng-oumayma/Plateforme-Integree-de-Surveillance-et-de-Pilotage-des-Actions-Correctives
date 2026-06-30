@@ -15,7 +15,6 @@ import DialogActions from "@mui/material/DialogActions";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SendIcon from "@mui/icons-material/Send";
 import SaveIcon from "@mui/icons-material/Save";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ScoreBar from "../../../components/checklists/ScoreBar";
 import ChecklistItemCard from "../../../components/checklists/ChecklistItemCard";
 import { checklistService } from "../../../services/checklistService";
@@ -151,28 +150,11 @@ export default function FillChecklistPage() {
 
   const total = template?.items?.length ?? 0;
 
-  const handleSubmit = async () => {
+  // ── Soumission → navigation vers la page résultats ────────────────────────
+  const handleSubmit = () => {
     setSubmitting(true);
-    try {
-      const result = await checklistResponseService.checkComplete(
-        inspectionId!,
-        templateId!,
-      );
-      if (!result.complete) {
-        setSubmitOpen(false);
-        setError(
-          `Checklist incomplète — ${result.missing} item(s) sans réponse.`,
-        );
-        return;
-      }
-      // ✅ Naviguer vers les résultats
-      navigate(`/checklists/results/${inspectionId}/${templateId}`);
-    } catch {
-      setError("Erreur lors de la soumission.");
-    } finally {
-      setSubmitting(false);
-      setSubmitOpen(false);
-    }
+    setSubmitOpen(false);
+    navigate(`/checklists/results/${inspectionId}/${templateId}`);
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
@@ -434,7 +416,11 @@ export default function FillChecklistPage() {
             onClick={handleSubmit}
             disabled={submitting}
             startIcon={
-              submitting ? <CircularProgress size={18} /> : <SendIcon />
+              submitting ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <SendIcon />
+              )
             }
           >
             {submitting ? "Envoi..." : "Confirmer"}
