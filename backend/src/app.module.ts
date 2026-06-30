@@ -18,7 +18,9 @@ import { ChecklistResponse } from './checklists/checklist-response.entity';
 // Ajouter ServeStaticModule pour servir les photos
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-
+import { AnomaliesModule } from './anomalies/anomalies.module';
+import { Anomaly } from './anomalies/anomaly.entity';
+import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -42,8 +44,10 @@ import { join } from 'path';
           PlanSurveillance,
           ChecklistTemplate,
           ChecklistItem,
-          ChecklistResponse, // ← ajouter
+          ChecklistResponse,
           ChecklistResponsePhoto,
+          Anomaly,
+          AnomalyPhoto,
         ],
         synchronize: true,
         logging: false,
@@ -55,6 +59,7 @@ import { join } from 'path';
     ScheduleModule.forRoot(), // ← active les crons NestJS
     PlanningModule,
     ChecklistsModule,
+    AnomaliesModule,
   ],
 })
 export class AppModule {}

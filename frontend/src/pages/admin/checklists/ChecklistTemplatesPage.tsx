@@ -29,7 +29,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { checklistService } from "../../../services/checklistService";
-import { inspectionService } from "../../../services/inspectionService";
+
 import { useAuth } from "../../../contexts/AuthContext";
 import type {
   ChecklistTemplate,
@@ -81,9 +81,6 @@ export default function ChecklistTemplatesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterDomaine, setFilterDomaine] = useState<string>("");
-  const [inspectionIds, setInspectionIds] = useState<Record<string, string>>(
-    {},
-  );
 
   // Dialog import Excel
   const [importOpen, setImportOpen] = useState(false);
@@ -119,21 +116,6 @@ export default function ChecklistTemplatesPage() {
   // Charger les templates
   useEffect(() => {
     load();
-  }, []);
-
-  // Charger les inspections EN_COURS pour afficher le bouton "Remplir"
-  useEffect(() => {
-    inspectionService
-      .getAll({ statut: "EN_COURS" })
-      .then((inspections) => {
-        const map: Record<string, string> = {};
-        inspections.forEach((i: any) => {
-          // Garder seulement la première inspection par domaine
-          if (!map[i.domaine]) map[i.domaine] = i.id;
-        });
-        setInspectionIds(map);
-      })
-      .catch(() => {});
   }, []);
 
   const filtered = filterDomaine
@@ -378,26 +360,6 @@ export default function ChecklistTemplatesPage() {
 
               {/* ── Actions ── */}
               <Box display="flex" gap={0.5} alignItems="center">
-                {/* Remplir — visible si inspection EN_COURS existe pour ce domaine */}
-                {inspectionIds[t.domaine] && t.actif && (
-                  <Tooltip title={`Remplir la checklist (inspection en cours)`}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="primary"
-                      startIcon={<PlayArrowIcon sx={{ fontSize: 14 }} />}
-                      sx={{ fontSize: 11, px: 1, py: 0.25, minWidth: 0 }}
-                      onClick={() =>
-                        navigate(
-                          `/checklists/fill/${inspectionIds[t.domaine]}/${t.id}`,
-                        )
-                      }
-                    >
-                      Remplir
-                    </Button>
-                  </Tooltip>
-                )}
-
                 {/* Aperçu — visible pour tout le monde */}
                 <Tooltip title="Voir les items">
                   <IconButton
