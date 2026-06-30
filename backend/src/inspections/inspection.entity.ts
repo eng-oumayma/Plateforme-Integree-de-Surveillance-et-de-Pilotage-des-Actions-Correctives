@@ -64,14 +64,8 @@ export class Inspection {
   updatedAt!: Date;
 
   @Column({ type: 'uuid', nullable: true })
-  // @IsUUID('4', { message: 'planId doit être un UUID valide' })
   planId?: string;
 
-
-
-
-
-   
   // ── Champs de clôture (US7) ──────────────────────────────────────────────
  
   /** ID de l'auditeur qui a clôturé */
