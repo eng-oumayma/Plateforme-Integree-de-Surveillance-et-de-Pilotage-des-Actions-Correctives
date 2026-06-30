@@ -1,39 +1,49 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import InputAdornment from '@mui/material/InputAdornment';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  Paper,
+  Tooltip,
+} from '@mui/material';
+
+// Icônes unifiées
 import AddIcon from '@mui/icons-material/Add';
+import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import DownloadIcon from '@mui/icons-material/Download';
 import LockIcon from '@mui/icons-material/Lock';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+
+// Composants et Services
 import CloseInspectionModal from '../../components/inspections/CloseInspectionModal';
 import { inspectionService } from '../../services/inspectionService';
+import { checklistService } from '../../services/checklistService';
 import { useAuth } from '../../contexts/AuthContext';
 
+
+// Configuration des Domaines
 const DOMAINES = [
-  'Plant','Magasin','Sanitaires','Cantine','Chimique',
-  'Locaux_techniques','Déchets','Transport','Infirmerie','Recycleurs','Incendie',
+  'Plant', 'Magasin', 'Sanitaires', 'Cantine', 'Chimique',
+  'Locaux_techniques', 'Déchets', 'Transport', 'Infirmerie', 'Recycleurs', 'Incendie',
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; color: any }> = {
@@ -45,35 +55,37 @@ const STATUS_CONFIG: Record<string, { label: string; color: any }> = {
 };
 
 export default function InspectionsListPage() {
-  const { user }   = useAuth();
-  const navigate   = useNavigate();
-  const isAdmin    = user?.role === 'ADMIN_HSEE';
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isAdmin = user?.role === 'ADMIN_HSEE';
 
+  // États filtres et chargement
   const [inspections, setInspections] = useState<any[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [error,   setError]           = useState('');
-  const [search,         setSearch]         = useState('');
-  const [filterDomaine,  setFilterDomaine]  = useState('');
-  const [filterStatut,   setFilterStatut]   = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterDomaine, setFilterDomaine] = useState('');
+  const [filterStatut, setFilterStatut] = useState('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo,   setFilterDateTo]   = useState('');
-  const [exportLoading,  setExportLoading]  = useState(false);
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
 
-  // Clôture
-  const [closeTarget,  setCloseTarget]  = useState<any | null>(null);
-  // Suppression
+  // États actions
+  const [closeTarget, setCloseTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
-  const [deleting,     setDeleting]     = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [templateIds, setTemplateIds] = useState<Record<string, string>>({});
 
+  // Récupération des inspections (Filtres)
   const fetchInspections = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const data = await inspectionService.getAll({
-        ...(filterDomaine  && { domaine:  filterDomaine }),
-        ...(filterStatut   && { statut:   filterStatut }),
+        ...(filterDomaine && { domaine: filterDomaine }),
+        ...(filterStatut && { statut: filterStatut }),
         ...(filterDateFrom && { dateFrom: filterDateFrom }),
-        ...(filterDateTo   && { dateTo:   filterDateTo }),
+        ...(filterDateTo && { dateTo: filterDateTo }),
       });
       setInspections(data);
     } catch {
@@ -83,8 +95,27 @@ export default function InspectionsListPage() {
     }
   }, [filterDomaine, filterStatut, filterDateFrom, filterDateTo]);
 
-  useEffect(() => { fetchInspections(); }, [fetchInspections]);
+  useEffect(() => {
+    fetchInspections();
+  }, [fetchInspections]);
 
+  // Récupération des modèles de checklists actifs (Travail de votre binôme)
+  useEffect(() => {
+    checklistService
+      .getAll()
+      .then((templates) => {
+        const map: Record<string, string> = {};
+        templates
+          .filter((t: any) => t.actif)
+          .forEach((t: any) => {
+            map[t.domaine] = t.id;
+          });
+        setTemplateIds(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Filtrage local côté client (Recherche textuelle globale)
   const filtered = inspections.filter((i) =>
     !search ||
     `${i.domaine} ${i.site} ${i.auditeur?.firstName} ${i.auditeur?.lastName}`
@@ -109,14 +140,14 @@ export default function InspectionsListPage() {
     setExportLoading(true);
     try {
       const blob = await inspectionService.exportCsv({
-        ...(filterDomaine  && { domaine:  filterDomaine }),
-        ...(filterStatut   && { statut:   filterStatut }),
+        ...(filterDomaine && { domaine: filterDomaine }),
+        ...(filterStatut && { statut: filterStatut }),
         ...(filterDateFrom && { dateFrom: filterDateFrom }),
-        ...(filterDateTo   && { dateTo:   filterDateTo }),
+        ...(filterDateTo && { dateTo: filterDateTo }),
       });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
       a.download = `inspections-hsee-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
@@ -210,8 +241,8 @@ export default function InspectionsListPage() {
         </Paper>
       ) : (
         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-          {/* Header table */}
-          <Box display="grid" gridTemplateColumns="2fr 1.2fr 1.2fr 1fr 1fr 80px 160px" gap={1}
+          {/* Header de la Table */}
+          <Box display="grid" gridTemplateColumns="2fr 1.2fr 1.2fr 1fr 1fr 60px 240px" gap={1}
             sx={{ px: 2, py: 1.5, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
             {['Domaine', 'Auditeur', 'Site', 'Date prévue', 'Statut', 'GPS', 'Actions'].map((h) => (
               <Typography key={h} variant="caption" fontWeight={600} color="text.secondary" textTransform="uppercase">
@@ -220,20 +251,19 @@ export default function InspectionsListPage() {
             ))}
           </Box>
 
-          {/* Rows */}
+          {/* Lignes d'inspections */}
           {filtered.map((inspection) => {
-            const cfg     = STATUS_CONFIG[inspection.statut] || STATUS_CONFIG.EN_COURS;
-            const canClose = inspection.statut === 'EN_COURS' &&
-              (inspection.auditeurId === user?.id || isAdmin);
+            const cfg = STATUS_CONFIG[inspection.statut] || STATUS_CONFIG.EN_COURS;
+            const canClose = inspection.statut === 'EN_COURS' && (inspection.auditeurId === user?.id || isAdmin);
 
             return (
               <Box key={inspection.id} display="grid"
-                gridTemplateColumns="2fr 1.2fr 1.2fr 1fr 1fr 80px 160px"
+                gridTemplateColumns="2fr 1.2fr 1.2fr 1fr 1fr 60px 240px"
                 gap={1} alignItems="center"
                 sx={{ px: 2, py: 1.5, borderBottom: '0.5px solid', borderColor: 'divider',
                   '&:last-child': { borderBottom: 'none' }, '&:hover': { bgcolor: 'grey.50' } }}>
 
-                {/* Domaine */}
+                {/* Domaine & Date de création */}
                 <Box>
                   <Typography variant="body2" fontWeight={500}>
                     {(inspection.domaine || '').replace(/_/g, ' ')}
@@ -251,12 +281,12 @@ export default function InspectionsListPage() {
                 {/* Site */}
                 <Typography variant="body2">{inspection.site}</Typography>
 
-                {/* Date */}
+                {/* Date Prévue */}
                 <Typography variant="body2">
                   {new Date(inspection.datePrevue).toLocaleDateString('fr-FR')}
                 </Typography>
 
-                {/* Statut */}
+                {/* Statut & Durée */}
                 <Box>
                   <Chip label={cfg.label} size="small" color={cfg.color} />
                   {inspection.durationMinutes && (
@@ -266,20 +296,44 @@ export default function InspectionsListPage() {
                   )}
                 </Box>
 
-                {/* GPS */}
+                {/* Coordonnées GPS (Votre Code) */}
                 <Tooltip title={inspection.latitude
                   ? `${Number(inspection.latitude).toFixed(4)}, ${Number(inspection.longitude).toFixed(4)}`
                   : 'Sans GPS'}>
-                  <Box>
+                  <Box display="flex" justifyContent="flex-start">
                     {inspection.latitude
                       ? <LocationOnIcon sx={{ fontSize: 18, color: 'success.main' }} />
                       : <LocationOffIcon sx={{ fontSize: 18, color: 'text.disabled' }} />}
                   </Box>
                 </Tooltip>
 
-                {/* Actions */}
-                <Box display="flex" gap={0.5} alignItems="center">
-                  {/* Clôturer — uniquement si EN_COURS et propriétaire/admin */}
+                {/* Actions unifiées (Votre travail + votre binôme) */}
+                <Box display="flex" gap={1} alignItems="center">
+                  
+                  {/* BOUTON REMPLIR : seulement si inspection EN_COURS et que la checklist existe */}
+                  {templateIds[inspection.domaine] && inspection.statut === "EN_COURS" && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => navigate(`/checklists/fill/${inspection.id}/${templateIds[inspection.domaine]}`)}
+                    >
+                      Remplir
+                    </Button>
+                  )}
+
+                  {/* BOUTON RÉSULTATS : Toujours visible si le template existe */}
+                  {templateIds[inspection.domaine] && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="success"
+                      onClick={() => navigate(`/checklists/results/${inspection.id}/${templateIds[inspection.domaine]}`)}
+                    >
+                      Résultats
+                    </Button>
+                  )}
+
+                  {/* Clôturer l'inspection (Votre Code) */}
                   {canClose && (
                     <Tooltip title="Clôturer l'inspection">
                       <IconButton size="small" color="success" onClick={() => setCloseTarget(inspection)}>
@@ -288,7 +342,7 @@ export default function InspectionsListPage() {
                     </Tooltip>
                   )}
 
-                  {/* Modifier */}
+                  {/* Modifier l'inspection */}
                   {inspection.statut === 'EN_COURS' && (
                     <Tooltip title="Modifier">
                       <IconButton size="small" onClick={() => navigate(`/inspections/${inspection.id}/edit`)}>
@@ -297,7 +351,7 @@ export default function InspectionsListPage() {
                     </Tooltip>
                   )}
 
-                  {/* Supprimer (Admin seulement) */}
+                  {/* Supprimer l'inspection (Admin seulement - Votre Code) */}
                   {isAdmin && (
                     <Tooltip title="Supprimer">
                       <IconButton size="small" color="error" onClick={() => setDeleteTarget(inspection)}>

@@ -147,6 +147,7 @@ import {
   Request,
   Req,
 } from '@nestjs/common';
+
 import { InspectionsService } from './inspections.service';
 import { CreateInspectionDto } from './dto/create-inspection.dto';
 import { UpdateInspectionDto } from './dto/Update-inspection.dto';
@@ -164,30 +165,21 @@ export class InspectionsController {
 
   /**
    * POST /inspections
-   * L'Auditeur crée une inspection — son ID vient du JWT
+   * L'Auditeur crée une inspection — son ID vient du JWT (req.user.sub)
    * Il ne fournit PAS auditeurId dans le body
    * Il peut fournir planId si l'inspection réalise un plan planifié
    */
   @Post()
   @Roles('ADMIN_HSEE', 'AUDITEUR')
-  create(@Body() dto: CreateInspectionDto, @Request() req) {
-    // Utilisation uniforme de req.user
-    const requesterId = req.user.userId || req.user.sub;
-    const requesterRole = req.user.role;
-    
+
+  create(@Body() dto: CreateInspectionDto, @Req() req) {
+     const requesterId   = req.user.userId;
+    const requesterRole = req.user?.role;
     return this.inspectionsService.create(dto, requesterId, requesterRole);
-  }
 
-
-     @Post(':id/close')
-  @Roles('AUDITEUR', 'ADMIN_HSEE')
-  close(@Param('id') id: string, @Body() dto: CloseInspectionDto, @Req() req) {
-    return this.inspectionsService.close(id, dto, req.user.userId);
   }
   /**
    * GET /inspections
-   * Admin → toutes les inspections
-   * Auditeur → uniquement les siennes
    */
   @Get()
   @Roles('ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION')
@@ -200,10 +192,8 @@ export class InspectionsController {
     @Query('dateTo') dateTo?: string,
   ) {
     const isAdmin = req.user.role === 'ADMIN_HSEE';
-    const requesterId = req.user.sub || req.user.userId;
-    
     return this.inspectionsService.findAll({
-      auditeurId: isAdmin ? undefined : requesterId,
+      auditeurId: isAdmin ? undefined : req.user.sub,
       domaine,
       site,
       statut,
@@ -223,7 +213,6 @@ export class InspectionsController {
 
   /**
    * PATCH /inspections/:id/statut
-   * Mettre à jour le statut (TERMINEE, VALIDEE, ANNULEE)
    */
   @Patch(':id/statut')
   @Roles('ADMIN_HSEE', 'AUDITEUR', 'PILOTE_ACTION')
@@ -236,7 +225,7 @@ export class InspectionsController {
     return this.inspectionsService.updateStatut(
       id,
       dto,
-      requesterId,
+      req.user.sub,
       req.user.role,
     );
   }
@@ -254,4 +243,9 @@ export class InspectionsController {
   remove(@Param('id') id: string) {
     return this.inspectionsService.remove(id);
   }
+
+
+  
+
 }
+
