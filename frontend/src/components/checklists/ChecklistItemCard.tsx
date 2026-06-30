@@ -13,7 +13,9 @@ import CotationSelector from "./CotationSelector";
 import DeviationForm from "./DeviationForm";
 import PhotoCapture from "./PhotoCapture";
 import { checklistResponseService } from "../../services/checklistResponseService";
-
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import CreateAnomalyModal from "../anomalies/CreateAnomalyModal";
+import { Button } from "@mui/material";
 type Photo = { id: string; url: string; originalName?: string };
 
 type ItemState = {
@@ -77,7 +79,7 @@ export default function ChecklistItemCard({
   });
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
-
+  const [anomalyModalOpen, setAnomalyModalOpen] = useState(false);
   // Sauvegarder automatiquement après chaque changement
   const save = async (newState: ItemState) => {
     if (!newState.cotation) return;
@@ -191,7 +193,7 @@ export default function ChecklistItemCard({
           />
         </Box>
 
-        {/* Déviation + Photos — dépliable */}
+        {/* Déviation + Photos + Anomalie — dépliable */}
         <Collapse in={expanded || isDeviation}>
           <Box display="flex" flexDirection="column" gap={1.5}>
             <DeviationForm
@@ -207,8 +209,32 @@ export default function ChecklistItemCard({
               photos={state.photos}
               onPhotosChange={(photos) => update({ photos })}
             />
+
+            {/* ── Bouton signaler anomalie ── */}
+            <Button
+              size="small"
+              variant="outlined"
+              color="warning"
+              startIcon={<WarningAmberIcon fontSize="small" />}
+              onClick={() => setAnomalyModalOpen(true)}
+              sx={{ alignSelf: "flex-start", fontSize: 12 }}
+            >
+              Signaler une anomalie
+            </Button>
           </Box>
         </Collapse>
+
+        {/* ── Modal création anomalie ── */}
+        <CreateAnomalyModal
+          open={anomalyModalOpen}
+          onClose={() => setAnomalyModalOpen(false)}
+          inspectionId={inspectionId}
+          checklistItemId={item.id}
+          itemLibelle={item.libelle}
+          onCreated={() => {
+            // Optionnel : afficher une confirmation ou rafraîchir
+          }}
+        />
 
         {/* Lien "voir détails" si collapsed */}
         {!expanded && !isDeviation && answered && (
