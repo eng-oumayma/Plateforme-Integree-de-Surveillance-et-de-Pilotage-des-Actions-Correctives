@@ -7,6 +7,11 @@ export const inspectionService = {
     return data;
   },
 
+    async close(id: string, payload: { commentaire?: string }) {
+    const { data } = await api.post(`/inspections/${id}/close`, payload);
+    return data;
+  },
+
   // GET /inspections?domaine=&site=&statut=&dateFrom=&dateTo=
   async getAll(params?) {
     const { data } = await api.get("/inspections", { params });
@@ -24,10 +29,22 @@ export const inspectionService = {
     const { data } = await api.patch(`/inspections/${id}/statut`, { statut });
     return data;
   },
+   async update(id: string, payload) {
+    const { data } = await api.patch(`/inspections/${id}`, payload);
+    return data;
+  },
 
   // DELETE /inspections/:id
   async remove(id: string) {
     const { data } = await api.delete(`/inspections/${id}`);
+    return data;
+  },
+
+  async exportCsv(params?) {
+    const { data } = await api.get('/inspections/export/csv', {
+      params,
+      responseType: 'blob',
+    });
     return data;
   },
 };

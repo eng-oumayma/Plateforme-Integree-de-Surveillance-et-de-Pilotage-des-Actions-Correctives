@@ -85,7 +85,7 @@ async create(
     const now             = new Date();
     const durationMinutes = Math.round((now.getTime() - inspection.timestamp.getTime()) / 60000);
  
-    inspection.statut          = InspectionStatus.TERMINEE;  // ✅ TERMINEE à la clôture
+    inspection.statut          = InspectionStatus.REALISE;  // ✅ REALISE à la clôture
     inspection.closedById      = requesterId;
     inspection.closedAt        = now;
     inspection.dateRealise     = now;
@@ -206,7 +206,7 @@ async create(
     if (dto.statut) {
       inspection.statut = dto.statut;
       // Horodater la fin si on passe à TERMINEE
-      if (dto.statut ===InspectionStatus.TERMINEE ) {         //InspectionStatus.REALISE
+      if (dto.statut ===InspectionStatus.REALISE) {         //InspectionStatus.REALISE
         inspection.dateRealise = new Date();
       }
     }
@@ -225,23 +225,23 @@ async create(
 
 
   // // ── Modifier une inspection ───────────────────────────────────────────────
-  // async update(
-  //   id: string,
-  //   dto: UpdateInspectionDto,
-  //   requesterId: string,
-  //   requesterRole: string,
-  // ): Promise<Inspection> {
-  //   const inspection = await this.findOne(id);
+  async update(
+    id: string,
+    dto: UpdateInspectionDto,
+    requesterId: string,
+    requesterRole: string,
+  ): Promise<Inspection> {
+    const inspection = await this.findOne(id);
  
-  //   if (requesterRole !== 'ADMIN_HSEE' && inspection.auditeurId !== requesterId) {
-  //     throw new ForbiddenException('Vous ne pouvez modifier que vos propres inspections');
-  //   }
+    if (requesterRole !== 'ADMIN_HSEE' && inspection.auditeurId !== requesterId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres inspections');
+    }
  
-  //   if (dto.domaine)    inspection.domaine    = dto.domaine;
-  //   if (dto.site)       inspection.site       = dto.site.trim();
-  //   if (dto.datePrevue) inspection.datePrevue = new Date(dto.datePrevue);
-  //   if (dto.statut)     inspection.statut     = dto.statut;
+    if (dto.domaine)    inspection.domaine    = dto.domaine;
+    if (dto.site)       inspection.site       = dto.site.trim();
+    if (dto.datePrevue) inspection.datePrevue = new Date(dto.datePrevue);
+    if (dto.statut)     inspection.statut     = dto.statut;
  
-  //   return this.repo.save(inspection);
-  // }
+    return this.repo.save(inspection);
+  }
 }
