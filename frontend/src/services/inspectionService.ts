@@ -7,8 +7,15 @@ export const inspectionService = {
     return data;
   },
 
-    async close(id: string, payload: { commentaire?: string }) {
+    /** POST /inspections/:id/close — clôture (vérifie checklist complète) */
+  async close(id: string, payload: { commentaire?: string }) {
     const { data } = await api.post(`/inspections/${id}/close`, payload);
+    return data;
+  },
+ 
+  /** GET /inspections/:id/checklist-status — état checklist sans clôturer */
+  async getChecklistStatus(id: string) {
+    const { data } = await api.get(`/inspections/${id}/checklist-status`);
     return data;
   },
 

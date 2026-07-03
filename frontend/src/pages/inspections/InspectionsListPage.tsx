@@ -352,13 +352,13 @@ export default function InspectionsListPage() {
                   )}
 
                   {/* Supprimer l'inspection (Admin seulement - Votre Code) */}
-                  {isAdmin && (
+                  {/* {isAdmin && ( */}
                     <Tooltip title="Supprimer">
                       <IconButton size="small" color="error" onClick={() => setDeleteTarget(inspection)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                  )}
+                  
                 </Box>
               </Box>
             );

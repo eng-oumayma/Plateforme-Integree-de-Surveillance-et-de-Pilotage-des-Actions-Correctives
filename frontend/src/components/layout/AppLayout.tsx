@@ -41,7 +41,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../../contexts/AuthContext";
 import InactivityDialog from "../common/InactivityDialog";
 
-const DRAWER_WIDTH = 256;
+const DRAWER_WIDTH = 200;
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN_HSEE: "Admin HSEE",
@@ -100,6 +100,7 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE"],
     children: [
       { label: "Calendrier 52 sem.", Icon: EventRepeatIcon, path: "/planning" },
+      { label: "Calendrier Réglementaire", Icon: CalendarMonthIcon, path: "/planning/unified" },
       { label: "Nouveau plan", Icon: AddCircleOutlineIcon, path: "/planning/new" },
     ],
   },
@@ -173,6 +174,7 @@ const BREADCRUMB_MAP: Record<string, string> = {
   "/mes-taches": "Mes inspections à réaliser",
   "/inspections": "Inspections",
   "/planning": "Planning 52 semaines",
+  "/planning/unified": "Calendrier Réglementaire Unifié",
   "/checklists": "Checklists",
   "/anomalies": "Anomalies",
   "/actions": "Actions correctives",
