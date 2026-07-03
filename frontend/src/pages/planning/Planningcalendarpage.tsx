@@ -16,11 +16,11 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import IconButton from '@mui/material/IconButton';
+
 import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
-import EditIcon from '@mui/icons-material/Edit';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { planningService } from '../../services/Planningservice';
 
 const DOMAINES = [
@@ -39,12 +39,13 @@ const DOMAINES = [
 
 const STATUS_CONFIG = {
   PLANIFIE:  { label: 'P',  fullLabel: 'Planifié',   bg: '#1565C0', color: '#fff', chip: 'primary'  as const },
+  EN_COURS:   { label: 'C',  fullLabel: 'En cours',   bg: '#ED6C02', color: '#fff', chip: 'warning'  as const }, // 👈 Ajouté
   REALISE:   { label: 'R',  fullLabel: 'Réalisé',    bg: '#2E7D32', color: '#fff', chip: 'success'  as const },
   EN_RETARD: { label: '!',  fullLabel: 'En retard',  bg: '#C62828', color: '#fff', chip: 'error'    as const },
   ANNULE:    { label: 'A',  fullLabel: 'Annulé',     bg: '#757575', color: '#fff', chip: 'default'  as const },
 };
 
-const STATUTS_UPDATE = ['PLANIFIE', 'REALISE', 'ANNULE'];
+const STATUTS_UPDATE = ['PLANIFIE', 'EN_COURS', 'REALISE', 'ANNULE'];
 
 const currentYear = new Date().getFullYear();
 const ANNEES = [currentYear - 1, currentYear, currentYear + 1];
@@ -101,6 +102,7 @@ export default function PlanningCalendarPage() {
   const stats = {
     total:     plans.length,
     planifie:  plans.filter((p) => p.statut === 'PLANIFIE').length,
+    enCours:   plans.filter((p) => p.statut === 'EN_COURS').length,
     realise:   plans.filter((p) => p.statut === 'REALISE').length,
     enRetard:  plans.filter((p) => p.statut === 'EN_RETARD').length,
     annule:    plans.filter((p) => p.statut === 'ANNULE').length,
@@ -195,6 +197,13 @@ export default function PlanningCalendarPage() {
           >
             Nouveau plan
           </Button>
+          <Button
+  variant="outlined"
+  startIcon={<CalendarMonthIcon />}
+  onClick={() => navigate('/planning/unified')}
+>
+  Vue Calendrier Mensuel
+</Button>
         </Box>
       </Box>
 
@@ -221,13 +230,14 @@ export default function PlanningCalendarPage() {
       </Box>
 
       {/* ── KPI bar ── */}
-      <Box display="grid" gridTemplateColumns="repeat(4, 1fr)" gap={2} mb={3}>
-        {[
-          { label: 'Planifiés',  val: stats.planifie,  bg: '#E3F2FD', color: '#1565C0' },
-          { label: 'Réalisés',   val: stats.realise,   bg: '#E8F5E9', color: '#2E7D32' },
-          { label: 'En retard',  val: stats.enRetard,  bg: '#FFEBEE', color: '#C62828' },
-          { label: 'Annulés',    val: stats.annule,    bg: '#F5F5F5', color: '#757575' },
-        ].map((s) => (
+      <Box display="grid" gridTemplateColumns="repeat(5, 1fr)" gap={2} mb={3}> 
+  {[
+    { label: 'Planifiés',  val: stats.planifie,   bg: '#E3F2FD', color: '#1565C0' },
+    { label: 'En cours',   val: stats.enCours,    bg: '#FFF3E0', color: '#ED6C02' }, 
+    { label: 'Réalisés',   val: stats.realise,    bg: '#E8F5E9', color: '#2E7D32' },
+    { label: 'En retard',  val: stats.enRetard,   bg: '#FFEBEE', color: '#C62828' },
+    { label: 'Annulés',    val: stats.annule,     bg: '#F5F5F5', color: '#757575' },
+  ].map((s) => (
           <Paper key={s.label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', p: 2, textAlign: 'center', borderRadius: 2, bgcolor: s.bg }}>
             <Typography variant="h4" fontWeight={700} sx={{ color: s.color }}>{s.val}</Typography>
             <Typography variant="caption" color="text.secondary">{s.label}</Typography>

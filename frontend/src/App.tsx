@@ -26,6 +26,7 @@ import CreateCorrectiveActionPage from "./pages/corrective-actions/CreateCorrect
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
 import MesTachesPage from "./pages/planning/MesTachesPage";
+import UnifiedCalendarPage from "./pages/planning/UnifiedCalendarPage";
 const theme = createTheme({
   palette: {
     primary: { main: "#1565C0" },
@@ -135,6 +136,11 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+                <Route path="/planning/unified" element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE"]}>
+                        <UnifiedCalendarPage />
+                    </ProtectedRoute>
+                        } />
 
               <Route
                 path="/mes-taches"
@@ -144,7 +150,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Future epics — placeholder */}
+            
 
               <Route
                 path="/checklists"

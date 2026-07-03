@@ -33,7 +33,7 @@ const RULES = [
   },
 ];
 
-const STRENGTH_COLOR = ["error", "error", "warning", "info", "success"];
+const STRENGTH_COLOR = ["error", "error", "warning", "info", "success"] as const;
 const STRENGTH_LABEL = ["", "Très faible", "Faible", "Moyen", "Fort"];
 
 export default function SetPasswordPage() {
@@ -271,7 +271,7 @@ export default function SetPasswordPage() {
                   <LinearProgress
                     variant="determinate"
                     value={(strength / RULES.length) * 100}
-                    color={STRENGTH_COLOR[strength]}
+                    color={STRENGTH_COLOR[strength] as "error" | "warning" | "info" | "success"}
                     sx={{ height: 6, borderRadius: 3 }}
                   />
 
