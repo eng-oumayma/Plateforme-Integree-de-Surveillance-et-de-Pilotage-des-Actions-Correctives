@@ -185,7 +185,7 @@ export default function PlanningConfigPage() {
         <Box>
           <Typography variant="h5" fontWeight={700}>Configurer un plan de surveillance</Typography>
           <Typography variant="body2" color="text.secondary">
-            US6 · Planification 52 semaines avec récurrences automatiques
+             Planification 52 semaines avec récurrences automatiques
           </Typography>
         </Box>
       </Box>

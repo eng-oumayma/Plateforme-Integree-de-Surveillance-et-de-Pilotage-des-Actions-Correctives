@@ -22,6 +22,8 @@ import { join } from 'path';
 import { AnomaliesModule } from './anomalies/anomalies.module';
 import { Anomaly } from './anomalies/anomaly.entity';
 import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
+import { RegulatoryEventsModule } from './regulatory-events/regulatory-events.module';
+import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -49,7 +51,11 @@ import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
           ChecklistResponsePhoto,
           Anomaly,
           AnomalyPhoto,
+
           CorrectiveAction,
+
+          RegulatoryEvent,
+
         ],
         synchronize: true,
         logging: false,
@@ -62,7 +68,11 @@ import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
     PlanningModule,
     ChecklistsModule,
     AnomaliesModule,
+
     CorrectiveActionsModule,
+
+    RegulatoryEventsModule,
+
   ],
 })
 export class AppModule {}

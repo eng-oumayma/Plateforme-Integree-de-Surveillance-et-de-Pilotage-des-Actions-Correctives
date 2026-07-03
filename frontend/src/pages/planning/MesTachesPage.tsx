@@ -16,7 +16,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { planningService } from '../../services/planningService';
+import { planningService } from '../../services/Planningservice';
 import { useAuth } from '../../contexts/AuthContext';
 
 // ── Helpers semaine ISO ────────────────────────────────────────────────────
