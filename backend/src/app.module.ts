@@ -9,7 +9,8 @@ import { Inspection } from './inspections/inspection.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PlanningModule } from './planning/planning.module';
 import { PlanSurveillance } from './planning/Plan-surveillance.entity';
-
+import { CorrectiveActionsModule } from './corrective-actions/corrective-actions.module';
+import { CorrectiveAction } from './corrective-actions/corrective-action.entity';
 import { ChecklistTemplate } from './checklists/checklist-template.entity';
 import { ChecklistItem } from './checklists/checklist-item.entity';
 import { ChecklistsModule } from './checklists/checklists.module';
@@ -18,7 +19,9 @@ import { ChecklistResponse } from './checklists/checklist-response.entity';
 // Ajouter ServeStaticModule pour servir les photos
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-
+import { AnomaliesModule } from './anomalies/anomalies.module';
+import { Anomaly } from './anomalies/anomaly.entity';
+import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -42,8 +45,11 @@ import { join } from 'path';
           PlanSurveillance,
           ChecklistTemplate,
           ChecklistItem,
-          ChecklistResponse, // ← ajouter
+          ChecklistResponse,
           ChecklistResponsePhoto,
+          Anomaly,
+          AnomalyPhoto,
+          CorrectiveAction,
         ],
         synchronize: true,
         logging: false,
@@ -55,6 +61,8 @@ import { join } from 'path';
     ScheduleModule.forRoot(), // ← active les crons NestJS
     PlanningModule,
     ChecklistsModule,
+    AnomaliesModule,
+    CorrectiveActionsModule,
   ],
 })
 export class AppModule {}

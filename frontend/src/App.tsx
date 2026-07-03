@@ -18,11 +18,14 @@ import PlanningCalendarPage from "./pages/planning/Planningcalendarpage";
 import PlanningConfigPage from "./pages/planning/Planningconfigpage";
 import FillChecklistPage from "./pages/admin/checklists/FillChecklistPage";
 import ChecklistResultsPage from "./pages/admin/checklists/ChecklistResultsPage";
+import ChecklistTemplatePage from "./pages/admin/checklists/ChecklistTemplatePage";
+import AnomaliesListPage from "./pages/anomalies/AnomaliesListPage";
+import AnomalyDetailPage from "./pages/anomalies/AnomalyDetailPage";
+import CreateCorrectiveActionPage from "./pages/corrective-actions/CreateCorrectiveActionPage";
 
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
 import MesTachesPage from "./pages/planning/MesTachesPage";
-
 const theme = createTheme({
   palette: {
     primary: { main: "#1565C0" },
@@ -133,19 +136,14 @@ export default function App() {
                 }
               />
 
-
-
-
-             
-
-            <Route
-              path="/mes-taches"
-              element={
-                <ProtectedRoute allowedRoles={['AUDITEUR']}>
-                  <MesTachesPage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/mes-taches"
+                element={
+                  <ProtectedRoute allowedRoles={["AUDITEUR"]}>
+                    <MesTachesPage />
+                  </ProtectedRoute>
+                }
+              />
               {/* Future epics — placeholder */}
 
               <Route
@@ -156,6 +154,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/checklists/builder"
                 element={
@@ -188,8 +187,39 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/anomalies" element={<DashboardPage />} />
-              <Route path="/actions" element={<DashboardPage />} />
+              <Route
+                path="/checklists/:id"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <ChecklistTemplatePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/anomalies"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <AnomaliesListPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/anomalies/:id"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <AnomalyDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/actions/new"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <CreateCorrectiveActionPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
               <Route path="/notifications" element={<DashboardPage />} />
             </Route>
