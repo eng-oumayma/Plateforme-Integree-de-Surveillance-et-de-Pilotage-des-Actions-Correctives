@@ -9,7 +9,8 @@ import { Inspection } from './inspections/inspection.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PlanningModule } from './planning/planning.module';
 import { PlanSurveillance } from './planning/Plan-surveillance.entity';
-
+import { CorrectiveActionsModule } from './corrective-actions/corrective-actions.module';
+import { CorrectiveAction } from './corrective-actions/corrective-action.entity';
 import { ChecklistTemplate } from './checklists/checklist-template.entity';
 import { ChecklistItem } from './checklists/checklist-item.entity';
 import { ChecklistsModule } from './checklists/checklists.module';
@@ -48,6 +49,7 @@ import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
           ChecklistResponsePhoto,
           Anomaly,
           AnomalyPhoto,
+          CorrectiveAction,
         ],
         synchronize: true,
         logging: false,
@@ -60,6 +62,7 @@ import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
     PlanningModule,
     ChecklistsModule,
     AnomaliesModule,
+    CorrectiveActionsModule,
   ],
 })
 export class AppModule {}

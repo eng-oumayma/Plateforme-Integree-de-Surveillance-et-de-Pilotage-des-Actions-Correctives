@@ -21,6 +21,7 @@ import ChecklistResultsPage from "./pages/admin/checklists/ChecklistResultsPage"
 import ChecklistTemplatePage from "./pages/admin/checklists/ChecklistTemplatePage";
 import AnomaliesListPage from "./pages/anomalies/AnomaliesListPage";
 import AnomalyDetailPage from "./pages/anomalies/AnomalyDetailPage";
+import CreateCorrectiveActionPage from "./pages/corrective-actions/CreateCorrectiveActionPage";
 
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
@@ -211,7 +212,14 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/actions" element={<DashboardPage />} />
+              <Route
+                path="/actions/new"
+                element={
+                  <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
+                    <CreateCorrectiveActionPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
               <Route path="/notifications" element={<DashboardPage />} />
             </Route>
