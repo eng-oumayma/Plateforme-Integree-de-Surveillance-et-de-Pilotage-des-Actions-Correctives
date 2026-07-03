@@ -22,6 +22,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import { anomalyService } from "../../services/anomalyService";
 import AnomaliesByDomainChart from "../../components/anomalies/AnomaliesByDomainChart";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { useAuth } from "../../contexts/AuthContext";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CRITICALITY_CONFIG: Record<
@@ -81,6 +82,8 @@ export default function AnomaliesListPage() {
     ...(filterDateFrom && { dateFrom: filterDateFrom }),
     ...(filterDateTo && { dateTo: filterDateTo }),
   };
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN_HSEE";
 
   const load = async () => {
     setLoading(true);
@@ -141,10 +144,12 @@ export default function AnomaliesListPage() {
       >
         <Box>
           <Typography variant="h5" fontWeight={700}>
-            Anomalies
+            {isAdmin ? "Toutes les anomalies" : "Mes anomalies"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {anomalies.length} anomalie(s) {hasActiveFilters && "(filtrées)"}
+            {isAdmin
+              ? `${anomalies.length} anomalie(s) au total ${hasActiveFilters ? "(filtrées)" : ""}`
+              : `${anomalies.length} anomalie(s) créée(s) par vous`}
           </Typography>
         </Box>
 

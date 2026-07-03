@@ -228,9 +228,19 @@ export default function AnomalyDetailPage() {
               </Box>
             </Box>
           ) : (
-            <Alert severity="info" sx={{ alignItems: "center" }}>
-              Aucune action corrective créée pour cette anomalie.
-            </Alert>
+            <Box>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Aucune action corrective créée pour cette anomalie.
+              </Alert>
+              <Button
+                variant="contained"
+                color="warning"
+                startIcon={<BuildIcon />}
+                onClick={() => navigate(`/actions/new?anomalyId=${anomaly.id}`)}
+              >
+                Créer une action corrective
+              </Button>
+            </Box>
           )}
         </CardContent>
       </Card>
