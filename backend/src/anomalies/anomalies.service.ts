@@ -83,7 +83,8 @@ export class AnomaliesService {
     site?: string;
     dateFrom?: string;
     dateTo?: string;
-    pilote?: string; // userId du pilote assigné (via action corrective)
+    pilote?: string;
+    createdById?: string; // ← ajouter
   }): Promise<Anomaly[]> {
     const qb = this.anomalyRepo
       .createQueryBuilder('a')
@@ -129,18 +130,21 @@ export class AnomaliesService {
         dateTo: new Date(filters.dateTo),
       });
     }
-
-    // Filtre pilote — prêt pour Epic 5, ignoré tant qu'aucune action n'existe
     if (filters.pilote) {
       qb.leftJoin('corrective_actions', 'ca', 'ca.anomalyId = a.id').andWhere(
         'ca.piloteId = :pilote',
         { pilote: filters.pilote },
       );
     }
+    // ← Nouveau filtre par créateur
+    if (filters.createdById) {
+      qb.andWhere('a.createdById = :createdById', {
+        createdById: filters.createdById,
+      });
+    }
 
     return qb.getMany();
   }
-
   // ── Stats pour les indicateurs de criticité ────────────────────────
   async getStats(filters: {
     domaine?: string;

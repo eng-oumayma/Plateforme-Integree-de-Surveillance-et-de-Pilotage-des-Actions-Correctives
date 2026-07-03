@@ -77,34 +77,9 @@ export class AnomaliesController {
   // GET /api/anomalies
   // Remplacer la méthode findAll dans anomalies.controller.ts
 
-  // GET /api/anomalies
-  @Get()
-  @Roles(Role.ADMIN_HSEE, Role.AUDITEUR)
-  findAll(
-    @Query('inspectionId') inspectionId?: string,
-    @Query('criticite') criticite?: string,
-    @Query('statut') statut?: string,
-    @Query('domaine') domaine?: string,
-    @Query('site') site?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('pilote') pilote?: string,
-  ) {
-    return this.service.findAll({
-      inspectionId,
-      criticite,
-      statut,
-      domaine,
-      site,
-      dateFrom,
-      dateTo,
-      pilote,
-    });
-  }
-
   // GET /api/anomalies/stats — indicateurs de criticité
   @Get('stats')
-  @Roles(Role.ADMIN_HSEE)
+  @Roles(Role.ADMIN_HSEE, Role.AUDITEUR)
   getStats(
     @Query('domaine') domaine?: string,
     @Query('site') site?: string,
@@ -142,25 +117,65 @@ export class AnomaliesController {
     return this.service.removePhoto(photoId);
   }
   // GET /api/anomalies/export/pdf
-  @Get('export/pdf')
+  // Remplacer la méthode findAll dans anomalies.controller.ts
+
+  @Get()
   @Roles(Role.ADMIN_HSEE, Role.AUDITEUR)
-  async exportPdf(
-    @Query('criticite') criticite: string,
-    @Query('statut') statut: string,
-    @Query('domaine') domaine: string,
-    @Query('site') site: string,
-    @Query('dateFrom') dateFrom: string,
-    @Query('dateTo') dateTo: string,
-    @Res() res: express.Response,
+  findAll(
+    @Request() req,
+    @Query('inspectionId') inspectionId?: string,
+    @Query('criticite') criticite?: string,
+    @Query('statut') statut?: string,
+    @Query('domaine') domaine?: string,
+    @Query('site') site?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('pilote') pilote?: string,
   ) {
-    const buffer = await this.service.generatePdf({
+    const isAdmin = req.user.role === 'ADMIN_HSEE';
+
+    const filters: any = {
+      inspectionId,
       criticite,
       statut,
       domaine,
       site,
       dateFrom,
       dateTo,
-    });
+      pilote,
+    };
+    if (!isAdmin) filters.createdById = req.user.userId;
+
+    return this.service.findAll(filters);
+  }
+
+  // Même correction pour export PDF
+  @Get('export/pdf')
+  @Roles(Role.ADMIN_HSEE, Role.AUDITEUR)
+  async exportPdf(
+    @Request() req,
+    @Res() res: express.Response,
+    @Query('criticite') criticite?: string,
+    @Query('statut') statut?: string,
+    @Query('domaine') domaine?: string,
+    @Query('site') site?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    const isAdmin = req.user.role === 'ADMIN_HSEE';
+
+    const filters: any = {
+      criticite,
+      statut,
+      domaine,
+      site,
+      dateFrom,
+      dateTo,
+    };
+    if (!isAdmin) filters.createdById = req.user.userId;
+
+    const buffer = await this.service.generatePdf(filters);
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="rapport-anomalies-${new Date().toISOString().slice(0, 10)}.pdf"`,
