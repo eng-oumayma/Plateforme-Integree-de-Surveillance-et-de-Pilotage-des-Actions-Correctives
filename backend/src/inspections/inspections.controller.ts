@@ -178,6 +178,27 @@ export class InspectionsController {
     return this.inspectionsService.create(dto, requesterId, requesterRole);
 
   }
+
+   /**
+   * POST /inspections/:id/close
+   * Clôture — bloque si checklist incomplète (US7)
+   */
+  @Post(':id/close')
+  @Roles('AUDITEUR', 'ADMIN_HSEE')
+  close(@Param('id') id: string, @Body() dto: CloseInspectionDto, @Req() req) {
+    return this.inspectionsService.close(id, dto, req.user.userId, req.user.role);
+  }
+ 
+  /**
+   * GET /inspections/:id/checklist-status
+   * ⚠️ Déclaré AVANT 'export/csv' et ':id' génériques
+   * Renvoie l'état de complétion checklist sans clôturer — utilisé par le modal
+   */
+  @Get(':id/checklist-status')
+  @Roles('ADMIN_HSEE', 'AUDITEUR')
+  getChecklistStatus(@Param('id') id: string) {
+    return this.inspectionsService.getChecklistStatus(id);
+  }
   /**
    * GET /inspections
    */
