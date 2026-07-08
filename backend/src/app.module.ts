@@ -24,6 +24,9 @@ import { Anomaly } from './anomalies/anomaly.entity';
 import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
 import { RegulatoryEventsModule } from './regulatory-events/regulatory-events.module';
 import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.entity';
+import { NotificationsModule } from './notifications/notifications.module';
+import { Notification } from './notifications/notification.entity';   
+import { Not } from 'typeorm';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -51,10 +54,9 @@ import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.e
           ChecklistResponsePhoto,
           Anomaly,
           AnomalyPhoto,
-
           CorrectiveAction,
-
           RegulatoryEvent,
+          Notification,
 
         ],
         synchronize: true,
@@ -68,10 +70,9 @@ import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.e
     PlanningModule,
     ChecklistsModule,
     AnomaliesModule,
-
     CorrectiveActionsModule,
-
     RegulatoryEventsModule,
+    NotificationsModule,
 
   ],
 })
