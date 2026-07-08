@@ -202,10 +202,35 @@ export class AnomaliesService {
 
   // ── GET une anomalie par ID ──────────────────────────────────────
   async findById(id: string): Promise<Anomaly> {
-    const anomaly = await this.anomalyRepo.findOne({
-      where: { id },
-      relations: { checklistItem: true, createdBy: true, photos: true },
-    });
+    const anomaly = await this.anomalyRepo
+      .createQueryBuilder('a')
+      .leftJoinAndSelect('a.checklistItem', 'item')
+      .leftJoinAndSelect('a.createdBy', 'creator')
+      .leftJoinAndSelect('a.photos', 'photos')
+      // ← Ajouter cette jointure
+      .leftJoinAndSelect('a.correctiveAction', 'ca')
+      .leftJoinAndSelect('ca.pilote', 'pilote')
+      .select([
+        'a',
+        'item.id',
+        'item.libelle',
+        'item.section',
+        'creator.id',
+        'creator.firstName',
+        'creator.lastName',
+        'photos',
+        // ← Ajouter ces champs
+        'ca.id',
+        'ca.description',
+        'ca.statut',
+        'ca.deadline',
+        'pilote.id',
+        'pilote.firstName',
+        'pilote.lastName',
+      ])
+      .where('a.id = :id', { id })
+      .getOne();
+
     if (!anomaly) throw new NotFoundException('Anomalie introuvable');
     return anomaly;
   }

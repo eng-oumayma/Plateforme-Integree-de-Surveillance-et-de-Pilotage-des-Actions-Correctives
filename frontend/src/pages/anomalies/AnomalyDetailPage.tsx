@@ -206,31 +206,59 @@ export default function AnomalyDetailPage() {
         sx={{ border: "1px solid", borderColor: "divider", mb: 3 }}
       >
         <CardContent sx={{ p: 3 }}>
-          <Typography
-            variant="subtitle2"
-            fontWeight={600}
-            color="text.secondary"
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
             mb={1.5}
           >
-            ACTION CORRECTIVE
-          </Typography>
+            <Typography
+              variant="subtitle2"
+              fontWeight={600}
+              color="text.secondary"
+            >
+              ACTION CORRECTIVE
+            </Typography>
+            {/* Statut anomalie */}
+            <Chip
+              label={STATUS_CONFIG[anomaly.statut]?.label}
+              size="small"
+              color={STATUS_CONFIG[anomaly.statut]?.color}
+              variant="outlined"
+            />
+          </Box>
+
           {anomaly.correctiveAction ? (
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <BuildIcon color="warning" />
-              <Box>
-                <Typography variant="body2" fontWeight={500}>
-                  {anomaly.correctiveAction.description}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Pilote : {anomaly.correctiveAction.pilote?.firstName}{" "}
-                  {anomaly.correctiveAction.pilote?.lastName}
-                </Typography>
+            // ── Action existante ──
+            <Box>
+              <Box display="flex" alignItems="center" gap={1.5} mb={1}>
+                <BuildIcon color="warning" />
+                <Box flex={1}>
+                  <Typography variant="body2" fontWeight={500}>
+                    {anomaly.correctiveAction.description}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Pilote : {anomaly.correctiveAction.pilote?.firstName}{" "}
+                    {anomaly.correctiveAction.pilote?.lastName}
+                  </Typography>
+                </Box>
               </Box>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() =>
+                  navigate(`/actions/${anomaly.correctiveAction.id}`)
+                }
+              >
+                Voir l'action →
+              </Button>
             </Box>
           ) : (
+            // ── Pas encore d'action ──
             <Box>
               <Alert severity="info" sx={{ mb: 2 }}>
-                Aucune action corrective créée pour cette anomalie.
+                Aucune action corrective n'a encore été créée pour cette
+                anomalie.
               </Alert>
               <Button
                 variant="contained"

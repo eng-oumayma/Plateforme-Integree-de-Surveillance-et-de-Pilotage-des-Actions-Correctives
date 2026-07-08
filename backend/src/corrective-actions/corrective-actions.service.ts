@@ -187,8 +187,66 @@ export class CorrectiveActionsService {
     return qb.getMany();
   }
 
-  // ── GET actions du pilote connecté ─────────────────────────────
+  // ── Task 1 : GET mes actions (pilote scope) ────────────────────
   async findMyActions(piloteId: string): Promise<CorrectiveAction[]> {
-    return this.findAll({ piloteId });
+    return this.actionRepo
+      .createQueryBuilder('a')
+      .leftJoinAndSelect('a.anomaly', 'anomaly')
+      .leftJoinAndSelect('a.createdBy', 'createdBy')
+      .select([
+        'a',
+        'anomaly.id',
+        'anomaly.description',
+        'anomaly.criticite',
+        'anomaly.domaine',
+        'createdBy.id',
+        'createdBy.firstName',
+        'createdBy.lastName',
+      ])
+      .where('a.piloteId = :piloteId', { piloteId })
+      .orderBy('a.deadline', 'ASC') // les plus urgentes en premier
+      .getMany();
+  }
+
+  // ── Task 2 : PUT statut + progression ─────────────────────────
+  async updateStatus(
+    id: string,
+    statut: ActionStatus,
+    progression: number,
+    userId: string,
+    userRole: string,
+  ): Promise<CorrectiveAction> {
+    const action = await this.findById(id);
+
+    // Contrôle d'accès :
+    // Pilote → peut seulement modifier ses propres actions
+    // Admin/Auditeur → peuvent modifier toutes les actions
+    if (userRole === 'PILOTE_ACTION' && action.piloteId !== userId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que vos propres actions',
+      );
+    }
+
+    // Règles métier sur les transitions de statut
+    // Pilote ne peut pas passer directement à VALIDEE ou REJETEE
+    if (
+      userRole === 'PILOTE_ACTION' &&
+      ['VALIDEE', 'REJETEE'].includes(statut)
+    ) {
+      throw new ForbiddenException(
+        "Seul l'Admin ou l'Auditeur peut valider ou rejeter une action",
+      );
+    }
+
+    // Si statut passe à TERMINEE → progression = 100 automatiquement
+    const finalProgression =
+      statut === ActionStatus.TERMINEE
+        ? 100
+        : Math.min(Math.max(progression ?? action.progression, 0), 100);
+
+    action.statut = statut;
+    action.progression = finalProgression;
+
+    return this.actionRepo.save(action);
   }
 }

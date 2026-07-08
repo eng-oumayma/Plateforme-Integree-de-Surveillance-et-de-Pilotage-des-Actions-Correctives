@@ -7,6 +7,8 @@ import {
   Query,
   Request,
   UseGuards,
+  Put,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CorrectiveActionsService } from './corrective-actions.service';
 import { CreateCorrectiveActionDto } from './dto/create-corrective-action.dto';
@@ -14,7 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../users/enums/role.enum';
-
+import { ActionStatus } from './enums/action-status.enum';
 @Controller('corrective-actions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CorrectiveActionsController {
@@ -59,5 +61,23 @@ export class CorrectiveActionsController {
   @Roles(Role.ADMIN_HSEE, Role.AUDITEUR, Role.PILOTE_ACTION)
   findOne(@Param('id') id: string) {
     return this.service.findById(id);
+  }
+
+  // ── Task 2 : PUT /corrective-actions/:id/status ────────────────
+  @Put(':id/status')
+  @Roles(Role.PILOTE_ACTION, Role.ADMIN_HSEE, Role.AUDITEUR)
+  updateStatus(
+    @Param('id') id: string,
+    @Body('statut') statut: ActionStatus,
+    @Body('progression') progression: number,
+    @Request() req,
+  ) {
+    return this.service.updateStatus(
+      id,
+      statut,
+      progression,
+      req.user.userId,
+      req.user.role,
+    );
   }
 }
