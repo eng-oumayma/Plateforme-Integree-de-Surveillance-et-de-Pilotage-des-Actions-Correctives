@@ -22,7 +22,8 @@ import ChecklistTemplatePage from "./pages/admin/checklists/ChecklistTemplatePag
 import AnomaliesListPage from "./pages/anomalies/AnomaliesListPage";
 import AnomalyDetailPage from "./pages/anomalies/AnomalyDetailPage";
 import CreateCorrectiveActionPage from "./pages/corrective-actions/CreateCorrectiveActionPage";
-
+import MyActionsPage from "./pages/corrective-actions/MyActionsPage";
+import ActionDetailPage from "./pages/corrective-actions/ActionDetailPage";
 import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesPage";
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
 import MesTachesPage from "./pages/planning/MesTachesPage";
@@ -136,11 +137,14 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-                <Route path="/planning/unified" element={
+              <Route
+                path="/planning/unified"
+                element={
                   <ProtectedRoute allowedRoles={["ADMIN_HSEE"]}>
-                        <UnifiedCalendarPage />
-                    </ProtectedRoute>
-                        } />
+                    <UnifiedCalendarPage />
+                  </ProtectedRoute>
+                }
+              />
 
               <Route
                 path="/mes-taches"
@@ -150,7 +154,6 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-            
 
               <Route
                 path="/checklists"
@@ -219,6 +222,27 @@ export default function App() {
                 }
               />
               <Route
+                path="/actions"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"]}
+                  >
+                    <MyActionsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/actions/:id"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"]}
+                  >
+                    <ActionDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/actions/new"
                 element={
                   <ProtectedRoute allowedRoles={["ADMIN_HSEE", "AUDITEUR"]}>
@@ -226,6 +250,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
               <Route path="/notifications" element={<DashboardPage />} />
             </Route>

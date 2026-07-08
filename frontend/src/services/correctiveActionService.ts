@@ -46,4 +46,17 @@ export const correctiveActionService = {
     });
     return data.filter((u: any) => u.status === "ACTIVE");
   },
+  // Ajouter cette méthode
+  
+  async updateStatus(
+    id: string,
+    statut: string,
+    progression: number,
+  ): Promise<any> {
+    const { data } = await api.put(`/corrective-actions/${id}/status`, {
+      statut,
+      progression,
+    });
+    return data;
+  },
 };
