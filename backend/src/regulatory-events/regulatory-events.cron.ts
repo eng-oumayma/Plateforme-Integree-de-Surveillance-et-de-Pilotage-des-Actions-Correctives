@@ -20,8 +20,8 @@ export class RegulatoryEventsCronService {
    * S'exécute automatiquement toutes les nuits à 1h00 du matin.
    * Scanne les événements à venir à J-30 et J-7.
    */
-//   @Cron(CronExpression.EVERY_DAY_AT_1AM)
-  @Cron('*/10 * * * * *')
+
+  @Cron('*/30 30 * * * *')
   async checkRegulatoryDeadlines() {
     this.logger.log('🚀 Analyse quotidienne des échéances réglementaires (J-30 / J-7)...');
 

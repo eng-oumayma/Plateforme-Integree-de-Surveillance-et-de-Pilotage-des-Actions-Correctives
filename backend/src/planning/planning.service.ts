@@ -11,12 +11,15 @@ import { UpdatePlanDto } from './dto/update-plan.dto';
 import { Frequence } from '../common/enums/Frequence.enum';
 import { PlanStatut } from '../common/enums/Plan-statut.enum';
 import { Domaine } from '../common/enums/domaine.enum';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 
 @Injectable()
 export class PlanningService {
   constructor(
     @InjectRepository(PlanSurveillance)
     private readonly repo: Repository<PlanSurveillance>,
+    private readonly notifService: NotificationsService,
   ) {}
 
   // ── Helper : date du lundi d'une semaine ISO ──────────────────────────────
@@ -83,8 +86,27 @@ export class PlanningService {
         dateFin:      this.getSundayOfWeek(dto.annee, semaine),
         autoGenere:   false,
       });
-      created.push(await this.repo.save(plan));
+      const saved = await this.repo.save(plan);
+      created.push(saved);
+    
+
+        // ── Notifier le responsable assigné ──────────────────────────────────
+      if (dto.responsableId) {
+        try {
+          await this.notifService.create({
+            destinataireId: dto.responsableId,
+            type:    NotificationType.PLAN_ASSIGNE,
+            titre:   '📋 Nouvelle inspection planifiée',
+            message: `Une inspection ${dto.domaine.replace(/_/g, ' ')} vous a été assignée pour la semaine S${semaine}/${dto.annee} — ${dto.site}.`,
+            lien:    '/mes-taches',
+            entityId: saved.id,
+          });
+        } catch (e) {
+          console.warn('[Notif] plan assigne:', e.message);
+        }
+      }
     }
+    
 
     return created;
   }
@@ -136,18 +158,55 @@ export class PlanningService {
   }
 
   // ── CRON : marquer En Retard les planifiés dépassés ──────────────────────
+  // async markOverdue(): Promise<number> {
+  //   const now = new Date();
+  //   const result = await this.repo
+  //     .createQueryBuilder()
+  //     .update(PlanSurveillance)
+  //     .set({ statut: PlanStatut.EN_RETARD })
+  //     .where('statut = :statut', { statut: PlanStatut.PLANIFIE })
+  //     .andWhere('dateFin < :now', { now })
+  //     .execute();
+  //   return result.affected ?? 0;
+  // }
+
+
+
+
+
   async markOverdue(): Promise<number> {
     const now = new Date();
-    const result = await this.repo
-      .createQueryBuilder()
-      .update(PlanSurveillance)
-      .set({ statut: PlanStatut.EN_RETARD })
-      .where('statut = :statut', { statut: PlanStatut.PLANIFIE })
-      .andWhere('dateFin < :now', { now })
-      .execute();
-    return result.affected ?? 0;
+    const overdues = await this.repo.find({
+      where: { statut: PlanStatut.PLANIFIE },
+      relations: { responsable: true },
+    });
+ 
+    let count = 0;
+    for (const plan of overdues) {
+      if (new Date(plan.dateFin) < now) {
+        plan.statut = PlanStatut.EN_RETARD;
+        await this.repo.save(plan);
+        count++;
+ 
+        // Notifier le responsable
+        if (plan.responsableId) {
+          try {
+            await this.notifService.create({
+              destinataireId: plan.responsableId,
+              type:    NotificationType.PLAN_EN_RETARD,
+              titre:   '⚠️ Inspection en retard',
+              message: `L'inspection ${plan.domaine.replace(/_/g, ' ')} de la semaine S${plan.semaine}/${plan.annee} est en retard.`,
+              lien:    '/mes-taches',
+              entityId: plan.id,
+            });
+          } catch (e) {
+            console.warn('[Notif] plan en retard:', e.message);
+          }
+        }
+      }
+    }
+    return count;
   }
-
   // ── CRON : générer automatiquement les plans de la semaine suivante ───────
   async autoGenerateNextWeek(): Promise<number> {
     const now    = new Date();

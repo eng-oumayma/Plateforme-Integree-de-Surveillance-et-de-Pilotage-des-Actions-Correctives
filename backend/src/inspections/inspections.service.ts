@@ -14,6 +14,8 @@ import { Domaine } from '../common/enums/domaine.enum';
 import { PlanningService } from 'src/planning/planning.service';
 import { PlanStatut } from 'src/common/enums/Plan-statut.enum';
 import { CloseInspectionDto } from './dto/Close-inspection.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/notification.entity';
 
 @Injectable()
 export class InspectionsService {
@@ -22,6 +24,7 @@ export class InspectionsService {
     private readonly repo: Repository<Inspection>,
     private readonly planningService: PlanningService,
     private readonly dataSource: DataSource,
+     private readonly notifService: NotificationsService,
   ) {}
 
 async create(
@@ -64,6 +67,21 @@ async create(
             console.warn(`[create] Échec liaison plan ${dto.planId}:`, e.message);
           }
       }
+
+
+       try {
+      await this.notifService.create({
+        destinataireId: auditeurId,
+        type:    NotificationType.INSPECTION_CREEE,
+        titre:   'Inspection créée',
+        message: `Votre inspection ${dto.domaine.replace(/_/g, ' ')} sur le site ${dto.site} a été créée. Commencez à remplir la checklist.`,
+        lien:    `/inspections/${saved.id}`,
+        entityId: saved.id,
+      });
+    } catch (e) {
+      // Ne jamais bloquer la création si la notif échoue
+      console.warn('[Notif] create inspection:', e.message);
+    }
 
       return this.findOne(saved.id);
     }
@@ -342,6 +360,41 @@ async create(
         console.warn(`[close] plan ${inspection.planId}:`, e.message);
       }
     }
+
+     // ── Notifier l'auditeur que son inspection est clôturée ───────────────
+    try {
+      await this.notifService.create({
+        destinataireId: inspection.auditeurId,
+        type:    NotificationType.INSPECTION_CLOTUREE,
+        titre:   '✅ Inspection clôturée',
+        message: `Votre inspection ${inspection.domaine.replace(/_/g, ' ')} sur ${inspection.site} a été clôturée avec succès.${checklistCheck.anomaliesCount > 0 ? ` ${checklistCheck.anomaliesCount} anomalie(s) détectée(s).` : ''}`,
+        lien:    `/inspections/${closed.id}`,
+        entityId: closed.id,
+      });
+    } catch (e) {
+      console.warn('[Notif] close inspection:', e.message);
+    }
+
+    // ── Si anomalies → notifier tous les admins ───────────────────────────
+    if (checklistCheck.anomaliesCount > 0) {
+      try {
+        const admins = await this.dataSource.query(
+          `SELECT id FROM users WHERE role = 'ADMIN_HSEE' AND status = 'ACTIVE'`,
+        );
+        const adminIds = admins.map((a: any) => a.id);
+ 
+        await this.notifService.createForMany(adminIds, {
+          type:    NotificationType.ANOMALIE_DETECTEE,
+          titre:   '⚠️ Anomalie(s) détectée(s)',
+          message: `${checklistCheck.anomaliesCount} anomalie(s) détectée(s) lors de l'inspection ${inspection.domaine.replace(/_/g, ' ')} — ${inspection.site}.`,
+          lien:    `/inspections/${closed.id}`,
+          entityId: closed.id,
+        });
+      } catch (e) {
+        console.warn('[Notif] anomalies admins:', e.message);
+      }
+    }
+ 
  
     return this.findOne(closed.id);
   }
