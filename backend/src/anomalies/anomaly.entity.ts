@@ -14,7 +14,8 @@ import { AnomalyPhoto } from './anomaly-photo.entity';
 import { Criticality } from './enums/criticality.enum';
 import { AnomalyStatus } from './enums/anomaly-status.enum';
 import { User } from '../users/user.entity';
-
+import { CorrectiveAction } from '../corrective-actions/corrective-action.entity';
+import { OneToOne } from 'typeorm';
 @Entity('anomalies')
 export class Anomaly {
   @PrimaryGeneratedColumn('uuid')
@@ -70,4 +71,6 @@ export class Anomaly {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+  @OneToOne(() => CorrectiveAction, (ca) => ca.anomaly, { nullable: true })
+  correctiveAction!: CorrectiveAction | null;
 }
