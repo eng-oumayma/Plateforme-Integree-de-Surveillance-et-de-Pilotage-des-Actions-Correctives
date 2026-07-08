@@ -19,7 +19,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import Badge from "@mui/material/Badge";
 import Tooltip from "@mui/material/Tooltip";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
@@ -28,7 +27,6 @@ import ChecklistIcon from "@mui/icons-material/Checklist";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import BuildIcon from "@mui/icons-material/Build";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -40,7 +38,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../../contexts/AuthContext";
 import InactivityDialog from "../common/InactivityDialog";
-
+import NotificationBell from '../notifications/NotificationBell';
 const DRAWER_WIDTH = 200;
 
 const ROLE_LABELS: Record<string, string> = {
@@ -155,18 +153,18 @@ const NAV_STRUCTURE: any[] = [
   },
 
   // ── Section SYSTÈME ──────────────────────────────────────────────────────
-  {
-    type: "divider",
-    label: "SYSTÈME",
-    roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
-  },
-  {
-    type: "item",
-    label: "Notifications",
-    Icon: NotificationsIcon,
-    path: "/notifications",
-    roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
-  },
+  // {
+  //   type: "divider",
+  //   label: "SYSTÈME",
+  //   roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
+  // },
+  // {
+  //   type: "item",
+  //   label: "Notifications",
+  //   // Icon: NotificationsIcon,
+  //   path: "/notifications",
+  //   roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
+  // },
 ];
 
 const BREADCRUMB_MAP: Record<string, string> = {
@@ -394,13 +392,9 @@ export default function AppLayout() {
 
             <Box flex={1} />
 
-            <Tooltip title="Notifications">
-              <IconButton onClick={() => navigate("/notifications")} sx={{ mr: 0.5 }}>
-                <Badge badgeContent={0} color="error">
-                  <NotificationsIcon fontSize="small" />
-                </Badge>
-              </IconButton>
-            </Tooltip>
+           
+
+             <NotificationBell />
 
             <Tooltip title="Mon profil">
               <IconButton onClick={() => setProfileOpen(true)} size="small">

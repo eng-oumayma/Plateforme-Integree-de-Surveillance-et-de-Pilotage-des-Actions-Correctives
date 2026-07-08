@@ -27,6 +27,7 @@ import ChecklistTemplatesPage from "./pages/admin/checklists/ChecklistTemplatesP
 import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage";
 import MesTachesPage from "./pages/planning/MesTachesPage";
 import UnifiedCalendarPage from "./pages/planning/UnifiedCalendarPage";
+import NotificationsPage from "./pages/notifications/NotificationsPage";
 const theme = createTheme({
   palette: {
     primary: { main: "#1565C0" },
@@ -227,7 +228,7 @@ export default function App() {
                 }
               />
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
-              <Route path="/notifications" element={<DashboardPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

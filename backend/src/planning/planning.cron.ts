@@ -57,7 +57,7 @@ export class PlanningCronService {
    * Passe en retard tous les plannings dont la semaine est inférieure à la semaine courante.
    */
   // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  @Cron('*/10 * * * * *')
+  @Cron('*/30 30 * * * *')
   async checkOverduePlannings() {
     this.logger.log('🚀 Vérification des plannings en retard par numéro de semaine...');
 
