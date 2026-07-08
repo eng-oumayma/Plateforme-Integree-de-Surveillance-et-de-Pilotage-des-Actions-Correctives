@@ -374,7 +374,7 @@ export default function AnomaliesListPage() {
           {/* Header tableau */}
           <Box
             display="grid"
-            gridTemplateColumns="100px 1.5fr 110px 130px 130px 100px"
+            gridTemplateColumns="1.5fr 110px 110px 110px 120px"
             gap={2}
             sx={{
               px: 2,
@@ -384,19 +384,24 @@ export default function AnomaliesListPage() {
               borderColor: "divider",
             }}
           >
-            {["Date", "Description", "Domaine", "Criticité", "Statut", ""].map(
-              (h) => (
-                <Typography
-                  key={h}
-                  variant="caption"
-                  fontWeight={600}
-                  color="text.secondary"
-                  textTransform="uppercase"
-                >
-                  {h}
-                </Typography>
-              ),
-            )}
+            {[
+              "Date",
+              "Description",
+              "Domaine",
+              "Criticité",
+              "Statut",
+              "Actions",
+            ].map((h) => (
+              <Typography
+                key={h}
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+                textTransform="uppercase"
+              >
+                {h}
+              </Typography>
+            ))}
           </Box>
 
           {anomalies.map((a) => {
@@ -406,7 +411,7 @@ export default function AnomaliesListPage() {
               <Box
                 key={a.id}
                 display="grid"
-                gridTemplateColumns="100px 1.5fr 110px 130px 130px 100px"
+                gridTemplateColumns="1.5fr 110px 110px 110px 120px"
                 gap={2}
                 alignItems="center"
                 sx={{
@@ -418,34 +423,36 @@ export default function AnomaliesListPage() {
                   "&:hover": { bgcolor: "grey.50" },
                 }}
               >
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(a.createdAt).toLocaleDateString("fr-FR")}
-                </Typography>
-
+                {/* Description + date en caption */}
                 <Box>
-                  <Typography variant="body2" noWrap sx={{ maxWidth: 280 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
                     {a.description}
                   </Typography>
-                  {a.checklistItem && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      noWrap
-                      display="block"
-                    >
-                      → {a.checklistItem.libelle}
-                    </Typography>
-                  )}
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(a.createdAt).toLocaleDateString("fr-FR")}
+                    {a.checklistItem && ` · ${a.checklistItem.libelle}`}
+                  </Typography>
                 </Box>
 
+                {/* Domaine */}
                 <Typography variant="body2">{a.domaine || "—"}</Typography>
 
+                {/* Criticité */}
                 <Chip
                   label={crit.label}
                   size="small"
                   sx={{ bgcolor: crit.bg, color: crit.color, fontWeight: 700 }}
                 />
 
+                {/* Statut */}
                 <Chip
                   label={status.label}
                   size="small"
@@ -453,12 +460,16 @@ export default function AnomaliesListPage() {
                   variant="outlined"
                 />
 
-                <Button
-                  size="small"
-                  onClick={() => navigate(`/anomalies/${a.id}`)}
-                >
-                  Détails
-                </Button>
+                {/* Actions */}
+                <Box display="flex" gap={0.5}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigate(`/anomalies/${a.id}`)}
+                  >
+                    Détails
+                  </Button>
+                </Box>
               </Box>
             );
           })}
