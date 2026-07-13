@@ -27,9 +27,17 @@ import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.e
 import { NotificationsModule } from './notifications/notifications.module';
 import { Notification } from './notifications/notification.entity';   
 import { Not } from 'typeorm';
+import { BullModule } from '@nestjs/bull';
+import { AlertsModule } from './alerts/alerts.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
@@ -73,6 +81,7 @@ import { Not } from 'typeorm';
     CorrectiveActionsModule,
     RegulatoryEventsModule,
     NotificationsModule,
+   
 
   ],
 })
