@@ -22,18 +22,14 @@ import { ActionComment } from './action-comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ActionHistory } from './action-history.entity';
 
-
 import { NotificationHelper } from 'src/notifications/notification-helper';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/notification.entity';
-import {  OnApplicationBootstrap } from '@nestjs/common';
+import { OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
-export class CorrectiveActionsService  {
-  
-
- 
+export class CorrectiveActionsService {
   constructor(
     @InjectRepository(CorrectiveAction)
     private actionRepo: Repository<CorrectiveAction>,
@@ -51,57 +47,55 @@ export class CorrectiveActionsService  {
     private historyRepo: Repository<ActionHistory>,
 
     private readonly notifService: NotificationsService,
-    
-
   ) {}
 
-//   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT) // S'exécute automatiquement toutes les nuits à minuit
-// async checkExpiredActions(): Promise<void> {
-//   const notifHelper = new NotificationHelper(this.notifService);
-//   const maintenant = new Date();
+  //   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT) // S'exécute automatiquement toutes les nuits à minuit
+  // async checkExpiredActions(): Promise<void> {
+  //   const notifHelper = new NotificationHelper(this.notifService);
+  //   const maintenant = new Date();
 
-//   // 1. Trouver toutes les actions expirées qui ne sont ni TERMINEE, ni VALIDEE, ni REJETEE
-//   const actionsExpirées = await this.actionRepo.find({
-//     where: {
-//       deadline: LessThan(maintenant), // Date limite passée
-//       statut: Not(In([ActionStatus.TERMINEE, ActionStatus.VALIDEE, ActionStatus.REJETEE])),
-//     },
-//     relations: { pilote: true },
-//   });
+  //   // 1. Trouver toutes les actions expirées qui ne sont ni TERMINEE, ni VALIDEE, ni REJETEE
+  //   const actionsExpirées = await this.actionRepo.find({
+  //     where: {
+  //       deadline: LessThan(maintenant), // Date limite passée
+  //       statut: Not(In([ActionStatus.TERMINEE, ActionStatus.VALIDEE, ActionStatus.REJETEE])),
+  //     },
+  //     relations: { pilote: true },
+  //   });
 
-//   console.log(`[CRON] Vérification des retards : ${actionsExpirées.length} action(s) en retard détectée(s).`);
+  //   console.log(`[CRON] Vérification des retards : ${actionsExpirées.length} action(s) en retard détectée(s).`);
 
-//   // 2. Envoyer les alertes pour chaque action en retard
-//   for (const action of actionsExpirées) {
-//     // A. Notification au Pilote d'action
-//     if (action.piloteId) {
-//       try {
-//         await notifHelper.notifyActionEnRetard(
-//           action.piloteId,
-//           'PILOTE',
-//           action.description,
-//           action.id
-//         );
-//       } catch (e) {
-//         console.warn(`Échec alerte retard pilote pour l'action ${action.id}:`, e);
-//       }
-//     }
+  //   // 2. Envoyer les alertes pour chaque action en retard
+  //   for (const action of actionsExpirées) {
+  //     // A. Notification au Pilote d'action
+  //     if (action.piloteId) {
+  //       try {
+  //         await notifHelper.notifyActionEnRetard(
+  //           action.piloteId,
+  //           'PILOTE',
+  //           action.description,
+  //           action.id
+  //         );
+  //       } catch (e) {
+  //         console.warn(`Échec alerte retard pilote pour l'action ${action.id}:`, e);
+  //       }
+  //     }
 
-//     // B. Notification à l'Auditeur correspondant (Créateur)
-//     if (action.createdById) {
-//       try {
-//         await notifHelper.notifyActionEnRetard(
-//           action.createdById,
-//           'AUDITEUR',
-//           action.description,
-//           action.id
-//         );
-//       } catch (e) {
-//         console.warn(`Échec alerte retard auditeur pour l'action ${action.id}:`, e);
-//       }
-//     }
-//   }
-// }
+  //     // B. Notification à l'Auditeur correspondant (Créateur)
+  //     if (action.createdById) {
+  //       try {
+  //         await notifHelper.notifyActionEnRetard(
+  //           action.createdById,
+  //           'AUDITEUR',
+  //           action.description,
+  //           action.id
+  //         );
+  //       } catch (e) {
+  //         console.warn(`Échec alerte retard auditeur pour l'action ${action.id}:`, e);
+  //       }
+  //     }
+  //   }
+  // }
 
   // ── US14 : Créer une action corrective ────────────────────────
   async create(
@@ -161,7 +155,9 @@ export class CorrectiveActionsService  {
     const creator = await this.userRepo.findOne({
       where: { id: createdById },
     });
-    const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : 'Un auditeur';
+    const creatorName = creator
+      ? `${creator.firstName} ${creator.lastName}`
+      : 'Un auditeur';
 
     // 🔔 1. NOTIFICATION INTERNE (Plateforme)
     try {
@@ -170,7 +166,7 @@ export class CorrectiveActionsService  {
         dto.piloteId,
         creatorName,
         dto.description,
-        saved.id
+        saved.id,
       );
     } catch (e) {
       console.warn('Internal notification for assignment failed:', e);
@@ -319,17 +315,14 @@ export class CorrectiveActionsService  {
   ): Promise<CorrectiveAction> {
     const action = await this.findById(id);
 
-    // Contrôle d'accès :
-    // Pilote → peut seulement modifier ses propres actions
-    // Admin/Auditeur → peuvent modifier toutes les actions
+    // Contrôle d'accès
     if (userRole === 'PILOTE_ACTION' && action.piloteId !== userId) {
       throw new ForbiddenException(
         'Vous ne pouvez modifier que vos propres actions',
       );
     }
 
-    // Règles métier sur les transitions de statut
-    // Pilote ne peut pas passer directement à VALIDEE ou REJETEE
+    // Pilote ne peut pas valider/rejeter
     if (
       userRole === 'PILOTE_ACTION' &&
       ['VALIDEE', 'REJETEE'].includes(statut)
@@ -339,35 +332,69 @@ export class CorrectiveActionsService  {
       );
     }
 
-    // Si statut passe à TERMINEE → progression = 100 automatiquement
     const finalProgression =
       statut === ActionStatus.TERMINEE
         ? 100
         : Math.min(Math.max(progression ?? action.progression, 0), 100);
 
     const ancienStatut = action.statut;
+
     action.statut = statut;
     action.progression = finalProgression;
-    
 
     const saved = await this.actionRepo.save(action);
 
-  // 🔔 1. NOTIFICATION INTERNE : Le pilote passe le statut à TERMINEE
-  if (statut === ActionStatus.TERMINEE && ancienStatut !== ActionStatus.TERMINEE) {
-    try {
-      // On initialise le helper de notification
-      const notifHelper = new NotificationHelper(this.notifService);
-      
-      // On notifie l'auditeur qui a créé l'action (createdById)
-      await notifHelper.notifyActionTerminee(
-        action.createdById,
-        `${action.pilote?.firstName || 'Un pilote'}`,
-        action.description,
-        action.id
-      );
-    } catch (e) {
-      console.warn('Notification interne ActionTerminee échouée:', e);
+    // Notification quand le pilote termine une action
+    if (
+      statut === ActionStatus.TERMINEE &&
+      ancienStatut !== ActionStatus.TERMINEE
+    ) {
+      try {
+        const notifHelper = new NotificationHelper(this.notifService);
+
+        await notifHelper.notifyActionTerminee(
+          action.createdById,
+          `${action.pilote?.firstName || 'Un pilote'}`,
+          action.description,
+          action.id,
+        );
+      } catch (e) {
+        console.warn('Notification interne ActionTerminee échouée:', e);
+      }
     }
+
+    // Notifications VALIDEE / REJETEE
+
+    if (ancienStatut !== statut && ['VALIDEE', 'REJETEE'].includes(statut)) {
+      const notifHelper = new NotificationHelper(this.notifService);
+
+      try {
+        await notifHelper.notifyActionStatutModifie(
+          action.piloteId,
+          statut,
+          action.description,
+          action.id,
+        );
+      } catch (e) {
+        console.warn(e);
+      }
+
+      if (action.pilote?.email) {
+        try {
+          await this.mailService.sendActionStatusEmail(
+            action.pilote.email,
+            action.pilote.firstName,
+            action.description,
+            statut,
+            action.motifRejet,
+          );
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    }
+
+    return this.findById(saved.id);
   }
 
   async addProof(
@@ -666,32 +693,4 @@ export class CorrectiveActionsService  {
       .orderBy('h.createdAt', 'ASC')
       .getMany();
   }
-=======
-
-  // 🟨 2. NOTIFICATIONS EXISTANTES (Email + Notification interne de validation/rejet)
-  if (ancienStatut !== statut && ['VALIDEE', 'REJETEE'].includes(statut)) {
-    const notifHelper = new NotificationHelper(this.notifService);
-    
-    // Notification interne pour le pilote
-    try {
-      await notifHelper.notifyActionStatutModifie(action.piloteId, statut, action.description, action.id);
-    } catch(e) { console.warn(e); }
-
-    // Votre logique Email Bull/Redis existante
-    if (action.pilote && action.pilote.email) {
-      try {
-        await this.mailService.sendActionStatusEmail(
-          action.pilote.email,
-          action.pilote.firstName,
-          action.description,
-          statut,
-          action.motifRejet,
-        );
-      } catch (e) { console.warn(e); }
-    }
-  }
-
-  return this.findById(saved.id);
-}
-
 }

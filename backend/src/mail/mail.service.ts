@@ -9,8 +9,9 @@ import bull from 'bull';
 export class MailService {
   private transporter;
 
-  constructor(private config: ConfigService,
-    @InjectQueue('mail-queue') private readonly mailQueue: bull.Queue, 
+  constructor(
+    private config: ConfigService,
+    @InjectQueue('mail-queue') private readonly mailQueue: bull.Queue,
   ) {
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
@@ -111,7 +112,7 @@ export class MailService {
       `,
     });
   }
-// Tâche 3 : Nouvelle action corrective
+  // Tâche 3 : Nouvelle action corrective
   async sendActionAssignedEmail(
     piloteEmail: string,
     piloteFirstName: string,
@@ -269,6 +270,3 @@ export class MailService {
     });
   }
 }
-
-}
-
