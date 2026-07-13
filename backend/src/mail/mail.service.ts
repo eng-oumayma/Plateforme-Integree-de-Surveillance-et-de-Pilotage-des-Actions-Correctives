@@ -2,16 +2,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { InjectQueue } from '@nestjs/bull';
-import bull from 'bull';
 
 @Injectable()
 export class MailService {
   private transporter;
 
-  constructor(private config: ConfigService,
-    @InjectQueue('mail-queue') private readonly mailQueue: bull.Queue, 
-  ) {
+  constructor(private config: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
@@ -111,7 +107,7 @@ export class MailService {
       `,
     });
   }
-// Tâche 3 : Nouvelle action corrective
+
   async sendActionAssignedEmail(
     piloteEmail: string,
     piloteFirstName: string,
@@ -124,28 +120,88 @@ export class MailService {
       createdByName: string;
     },
   ): Promise<void> {
-    // On pousse l'action dans la file d'attente Redis sans bloquer l'exécution
-    await this.mailQueue.add('action-assigned', {
-      piloteEmail,
-      piloteFirstName,
-      action,
+    const url = `http://localhost:5173/actions/${action.id}`;
+    const deadline = new Date(action.deadline).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
     });
-  }
 
-  // Tâche 4 : Statut mis à jour (Validation / Rejet)
-  async sendActionStatusEmail(
-    piloteEmail: string,
-    piloteFirstName: string,
-    actionTitle: string,
-    status: string,
-    comment?: string,
-  ): Promise<void> {
-    await this.mailQueue.add('action-status', {
-      piloteEmail,
-      piloteFirstName,
-      actionTitle,
-      status,
-      comment,
+    const critColors: Record<string, string> = {
+      FAIBLE: '#4CAF50',
+      MODERE: '#FFC107',
+      CRITIQUE: '#FF9800',
+      BLOQUANT: '#F44336',
+    };
+    const critLabels: Record<string, string> = {
+      FAIBLE: 'Faible',
+      MODERE: 'Modéré',
+      CRITIQUE: 'Critique',
+      BLOQUANT: 'Bloquant',
+    };
+
+    await this.transporter.sendMail({
+      from: `"LEONI HSEE" <${this.config.get('MAIL_USER')}>`,
+      to: piloteEmail,
+      subject: `⚡ Nouvelle action corrective assignée — ${critLabels[action.criticite]}`,
+      html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#333">
+
+        <div style="background:#1F3864;padding:20px 24px;border-radius:8px 8px 0 0">
+          <h1 style="color:white;margin:0;font-size:20px">LEONI HSEE Platform</h1>
+          <p style="color:#C5D8EA;margin:4px 0 0;font-size:13px">Nouvelle action corrective</p>
+        </div>
+
+        <div style="border:1px solid #e0e0e0;border-top:none;padding:24px;border-radius:0 0 8px 8px">
+          <p style="font-size:16px;margin-bottom:16px">
+            Bonjour <strong>${piloteFirstName}</strong>,
+          </p>
+          <p style="color:#555;margin-bottom:20px">
+            Une action corrective vous a été assignée par <strong>${action.createdByName}</strong>.
+            Vous êtes responsable de sa mise en œuvre.
+          </p>
+
+          <div style="background:#f9f9f9;border-radius:8px;padding:16px;margin-bottom:20px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#888;width:140px">Anomalie à l'origine</td>
+                <td style="padding:6px 0;font-size:13px">${action.anomalyDescription}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#888">Action à réaliser</td>
+                <td style="padding:6px 0;font-size:13px;font-weight:500">${action.description}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#888">Criticité</td>
+                <td style="padding:6px 0">
+                  <span style="background:${critColors[action.criticite]};color:white;
+                               padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700">
+                    ${critLabels[action.criticite]}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#888">Deadline</td>
+                <td style="padding:6px 0;font-size:13px;font-weight:500;color:#E65100">
+                  📅 ${deadline}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <a href="${url}"
+             style="display:inline-block;background:#378ADD;color:white;
+                    padding:12px 28px;border-radius:6px;text-decoration:none;
+                    font-weight:bold;font-size:14px">
+            Accéder à l'action →
+          </a>
+
+          <p style="color:#999;font-size:11px;margin-top:20px">
+            Si vous avez des questions, contactez votre responsable HSEE.
+          </p>
+        </div>
+      </div>
+    `,
     });
   }
 }
