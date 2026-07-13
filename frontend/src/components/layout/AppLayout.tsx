@@ -36,7 +36,6 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { useAuth } from "../../contexts/AuthContext";
 import InactivityDialog from "../common/InactivityDialog";
 import NotificationBell from '../notifications/NotificationBell';
@@ -152,15 +151,20 @@ const NAV_STRUCTURE: any[] = [
     path: "/dashboard/kpi",
     roles: ["ADMIN_HSEE"],
   },
-  {
-    type: "item",
-    label: "Config. des Alertes",
-    Icon: SettingsIcon,
-    path: "/admin/config-alertes",
-    roles: ["ADMIN_HSEE"],
-  },
 
- 
+  // ── Section SYSTÈME ──────────────────────────────────────────────────────
+  // {
+  //   type: "divider",
+  //   label: "SYSTÈME",
+  //   roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
+  // },
+  // {
+  //   type: "item",
+  //   label: "Notifications",
+  //   // Icon: NotificationsIcon,
+  //   path: "/notifications",
+  //   roles: ["ADMIN_HSEE", "AUDITEUR", "PILOTE_ACTION"],
+  // },
 ];
 
 const BREADCRUMB_MAP: Record<string, string> = {
@@ -176,7 +180,6 @@ const BREADCRUMB_MAP: Record<string, string> = {
   "/dashboard/kpi": "KPI / Rapports",
   "/notifications": "Notifications",
   "/profile": "Mon profil",
-  "/admin/config-alertes": "Configuration des Alertes",
 };
 
 export default function AppLayout() {

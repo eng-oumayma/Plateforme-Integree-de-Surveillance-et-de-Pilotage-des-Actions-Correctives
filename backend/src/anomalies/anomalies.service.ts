@@ -10,10 +10,7 @@ import { AnomalyStatus } from './enums/anomaly-status.enum';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
-import { NotificationHelper } from '../notifications/notification-helper'; // Ajustez le chemin selon votre structure
-import { NotificationsService } from '../notifications/notifications.service';
-import { User } from '../users/user.entity';
-import { Role } from '../users/enums/role.enum';
+
 @Injectable()
 export class AnomaliesService {
   constructor(
@@ -23,9 +20,6 @@ export class AnomaliesService {
     private photoRepo: Repository<AnomalyPhoto>,
     @InjectRepository(ChecklistItem)
     private itemRepo: Repository<ChecklistItem>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-    private readonly notifService: NotificationsService,
   ) {}
 
   // ── Task 3 + 4 : Créer une anomalie liée à inspection + item ──
@@ -55,33 +49,7 @@ export class AnomaliesService {
       photos: [],
     });
 
-    // 1. Sauvegarde en BDD
-    const savedAnomaly = await this.anomalyRepo.save(anomaly);
-
-    // 🔔 2. US23 : Appel de notifyAnomalieDetectee pour alerter les administrateurs HSEE
-    try {
-      // On cherche tous les admins du système
-      const admins = await this.userRepo.find({ where: { role: Role.ADMIN_HSEE } });
-      const adminIds = admins.map((admin) => admin.id);
-
-      if (adminIds.length > 0) {
-        const notifHelper = new NotificationHelper(this.notifService);
-        
-        await notifHelper.notifyAnomalieDetectee(
-          adminIds,
-          savedAnomaly.domaine || 'Général',
-          savedAnomaly.inspectionId,
-        );
-      }
-    } catch (e) {
-      // Bloc try/catch de sécurité pour que l'anomalie soit créée même si les notifs échouent
-      console.warn(
-        'Notification AnomalieDetectee échouée:',
-        e instanceof Error ? e.message : String(e),
-      );
-    }
-
-    return savedAnomaly;
+    return this.anomalyRepo.save(anomaly);
   }
 
   async addPhoto(

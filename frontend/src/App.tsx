@@ -29,7 +29,6 @@ import ChecklistBuilderPage from "./pages/admin/checklists/ChecklistBuilderPage"
 import MesTachesPage from "./pages/planning/MesTachesPage";
 import UnifiedCalendarPage from "./pages/planning/UnifiedCalendarPage";
 import NotificationsPage from "./pages/notifications/NotificationsPage";
-import { AlertPreferences } from "./pages/admin/AlertPreferences";
 const theme = createTheme({
   palette: {
     primary: { main: "#1565C0" },
@@ -252,7 +251,6 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/admin/config-alertes" element={<AlertPreferences />} />
 
               <Route path="/dashboard/kpi" element={<DashboardPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
