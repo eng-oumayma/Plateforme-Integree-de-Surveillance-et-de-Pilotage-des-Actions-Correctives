@@ -27,10 +27,24 @@ import { Anomaly } from './anomalies/anomaly.entity';
 import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
 import { RegulatoryEventsModule } from './regulatory-events/regulatory-events.module';
 import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.entity';
+
 import { ActionComment } from './corrective-actions/action-comment.entity';
+
+import { NotificationsModule } from './notifications/notifications.module';
+import { Notification } from './notifications/notification.entity';   
+import { Not } from 'typeorm';
+import { BullModule } from '@nestjs/bull';
+import { AlertsModule } from './alerts/alerts.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
@@ -55,11 +69,18 @@ import { ActionComment } from './corrective-actions/action-comment.entity';
           ChecklistResponsePhoto,
           Anomaly,
           AnomalyPhoto,
+
           ActionProof,
           CorrectiveAction,
           ActionComment,
           RegulatoryEvent,
           ActionHistory,
+
+          CorrectiveAction,
+          RegulatoryEvent,
+          Notification,
+
+
         ],
         synchronize: true,
         logging: false,
@@ -72,10 +93,13 @@ import { ActionComment } from './corrective-actions/action-comment.entity';
     PlanningModule,
     ChecklistsModule,
     AnomaliesModule,
-
     CorrectiveActionsModule,
-
     RegulatoryEventsModule,
+
+
+    NotificationsModule,
+   
+
   ],
 })
 export class AppModule {}
