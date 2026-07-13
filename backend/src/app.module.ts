@@ -16,6 +16,9 @@ import { ChecklistItem } from './checklists/checklist-item.entity';
 import { ChecklistsModule } from './checklists/checklists.module';
 import { ChecklistResponsePhoto } from './checklists/checklist-response-photo.entity';
 import { ChecklistResponse } from './checklists/checklist-response.entity';
+import { ActionProof } from './corrective-actions/action-proof.entity';
+import { ActionHistory } from './corrective-actions/action-history.entity';
+
 // Ajouter ServeStaticModule pour servir les photos
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -24,6 +27,7 @@ import { Anomaly } from './anomalies/anomaly.entity';
 import { AnomalyPhoto } from './anomalies/anomaly-photo.entity';
 import { RegulatoryEventsModule } from './regulatory-events/regulatory-events.module';
 import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.entity';
+import { ActionComment } from './corrective-actions/action-comment.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -51,11 +55,11 @@ import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.e
           ChecklistResponsePhoto,
           Anomaly,
           AnomalyPhoto,
-
+          ActionProof,
           CorrectiveAction,
-
+          ActionComment,
           RegulatoryEvent,
-
+          ActionHistory,
         ],
         synchronize: true,
         logging: false,
@@ -72,7 +76,6 @@ import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.e
     CorrectiveActionsModule,
 
     RegulatoryEventsModule,
-
   ],
 })
 export class AppModule {}
