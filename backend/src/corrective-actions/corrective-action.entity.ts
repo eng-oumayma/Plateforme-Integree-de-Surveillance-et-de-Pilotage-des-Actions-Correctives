@@ -13,7 +13,8 @@ import { Anomaly } from '../anomalies/anomaly.entity';
 import { User } from '../users/user.entity';
 import { ActionStatus } from './enums/action-status.enum';
 import { Criticality } from '../anomalies/enums/criticality.enum';
-
+import { ActionProof } from './action-proof.entity';
+import { OneToMany } from 'typeorm';
 @Entity('corrective_actions')
 export class CorrectiveAction {
   @PrimaryGeneratedColumn('uuid')
@@ -75,7 +76,11 @@ export class CorrectiveAction {
   @ManyToOne(() => User, { nullable: true, eager: false })
   @JoinColumn({ name: 'closedById' })
   closedBy!: User;
-
+  @OneToMany(() => ActionProof, (proof) => proof.action, {
+    cascade: true,
+    eager: false,
+  })
+  proofs!: ActionProof[];
   @Column({ type: 'timestamp', nullable: true })
   closedAt!: Date;
 

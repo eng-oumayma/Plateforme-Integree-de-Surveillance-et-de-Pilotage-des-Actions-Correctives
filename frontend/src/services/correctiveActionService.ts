@@ -47,7 +47,7 @@ export const correctiveActionService = {
     return data.filter((u: any) => u.status === "ACTIVE");
   },
   // Ajouter cette méthode
-  
+
   async updateStatus(
     id: string,
     statut: string,
@@ -57,6 +57,67 @@ export const correctiveActionService = {
       statut,
       progression,
     });
+    return data;
+  },
+
+  async uploadProof(actionId: string, file: File): Promise<any> {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await api.post(
+      `/corrective-actions/${actionId}/proofs`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data;
+  },
+
+  async getProofs(actionId: string): Promise<any[]> {
+    const { data } = await api.get(`/corrective-actions/${actionId}/proofs`);
+    return data;
+  },
+
+  async deleteProof(proofId: string): Promise<void> {
+    await api.delete(`/corrective-actions/proofs/${proofId}`);
+  },
+  async getComments(actionId: string): Promise<any[]> {
+    const { data } = await api.get(`/corrective-actions/${actionId}/comments`);
+    return data;
+  },
+
+  async addComment(
+    actionId: string,
+    message: string,
+    mentions?: string[],
+  ): Promise<any> {
+    const { data } = await api.post(
+      `/corrective-actions/${actionId}/comments`,
+      { message, mentions: mentions ?? [] },
+    );
+    return data;
+  },
+  async getActionMembers(actionId: string): Promise<any[]> {
+    // Récupère pilote + créateur de l'action pour les suggestions @mention
+    const action = await this.getById(actionId);
+    const members: any[] = [];
+    if (action.pilote) members.push(action.pilote);
+    if (action.createdBy) members.push(action.createdBy);
+    return members;
+  },
+
+  async validate(id: string): Promise<any> {
+    const { data } = await api.put(`/corrective-actions/${id}/validate`);
+    return data;
+  },
+
+  async reject(id: string, motif: string): Promise<any> {
+    const { data } = await api.put(`/corrective-actions/${id}/reject`, {
+      motif,
+    });
+    return data;
+  },
+
+  async getHistory(id: string): Promise<any[]> {
+    const { data } = await api.get(`/corrective-actions/${id}/history`);
     return data;
   },
 };
