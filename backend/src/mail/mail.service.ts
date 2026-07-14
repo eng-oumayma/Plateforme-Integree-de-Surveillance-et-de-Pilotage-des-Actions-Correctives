@@ -205,7 +205,6 @@ export class MailService {
     });
   }
 
-
   async sendMentionEmail(
     email: string,
     firstName: string,
@@ -326,7 +325,3 @@ export class MailService {
     });
   }
 }
-
-}
-
-

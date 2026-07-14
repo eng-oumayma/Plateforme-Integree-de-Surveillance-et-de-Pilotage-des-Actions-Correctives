@@ -14,7 +14,6 @@ import { MailService } from '../mail/mail.service';
 import { CreateCorrectiveActionDto } from './dto/create-corrective-action.dto';
 import { ActionStatus } from './enums/action-status.enum';
 
-
 import { ActionProof } from './action-proof.entity';
 import { ProofType } from './enums/proof-type.enum';
 import * as fs from 'fs';
@@ -23,17 +22,11 @@ import { ActionComment } from './action-comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ActionHistory } from './action-history.entity';
 
-
 import { NotificationHelper } from 'src/notifications/notification-helper';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/notification.entity';
-import {  OnApplicationBootstrap } from '@nestjs/common';
+import { OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-
-@Injectable()
-export class CorrectiveActionsService  {
-  
-
 
 @Injectable()
 export class CorrectiveActionsService {
@@ -48,14 +41,12 @@ export class CorrectiveActionsService {
     private userRepo: Repository<User>,
     private mailService: MailService,
 
-
     @InjectRepository(ActionComment)
     private commentRepo: Repository<ActionComment>,
     @InjectRepository(ActionHistory)
     private historyRepo: Repository<ActionHistory>,
 
     private readonly notifService: NotificationsService,
-    
   ) {}
 
   // ── US14 : Créer une action corrective ────────────────────────
@@ -256,17 +247,14 @@ export class CorrectiveActionsService {
   ): Promise<CorrectiveAction> {
     const action = await this.findById(id);
 
-    // Contrôle d'accès :
-    // Pilote → peut seulement modifier ses propres actions
-    // Admin/Auditeur → peuvent modifier toutes les actions
+    // Contrôle d'accès
     if (userRole === 'PILOTE_ACTION' && action.piloteId !== userId) {
       throw new ForbiddenException(
         'Vous ne pouvez modifier que vos propres actions',
       );
     }
 
-    // Règles métier sur les transitions de statut
-    // Pilote ne peut pas passer directement à VALIDEE ou REJETEE
+    // Pilote ne peut pas valider/rejeter
     if (
       userRole === 'PILOTE_ACTION' &&
       ['VALIDEE', 'REJETEE'].includes(statut)
@@ -276,18 +264,70 @@ export class CorrectiveActionsService {
       );
     }
 
-    // Si statut passe à TERMINEE → progression = 100 automatiquement
     const finalProgression =
       statut === ActionStatus.TERMINEE
         ? 100
         : Math.min(Math.max(progression ?? action.progression, 0), 100);
 
+    const ancienStatut = action.statut;
+
     action.statut = statut;
     action.progression = finalProgression;
 
-    return this.actionRepo.save(action);
-  }
+    const saved = await this.actionRepo.save(action);
 
+    // Notification quand le pilote termine une action
+    if (
+      statut === ActionStatus.TERMINEE &&
+      ancienStatut !== ActionStatus.TERMINEE
+    ) {
+      try {
+        const notifHelper = new NotificationHelper(this.notifService);
+
+        await notifHelper.notifyActionTerminer(
+          action.createdById,
+          `${action.pilote?.firstName || 'Un pilote'}`,
+          action.description,
+          action.id,
+        );
+      } catch (e) {
+        console.warn('Notification interne ActionTerminee échouée:', e);
+      }
+    }
+
+    // Notifications VALIDEE / REJETEE
+
+    if (ancienStatut !== statut && ['VALIDEE', 'REJETEE'].includes(statut)) {
+      const notifHelper = new NotificationHelper(this.notifService);
+
+      try {
+        await notifHelper.notifyActionStatutModifie(
+          action.piloteId,
+          statut,
+          action.description,
+          action.id,
+        );
+      } catch (e) {
+        console.warn(e);
+      }
+
+      if (action.pilote?.email) {
+        try {
+          await this.mailService.sendActionStatusEmail(
+            action.pilote.email,
+            action.pilote.firstName,
+            action.description,
+            statut,
+            action.motifRejet,
+          );
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    }
+
+    return this.findById(saved.id);
+  }
 
   async addProof(
     actionId: string,
@@ -585,33 +625,4 @@ export class CorrectiveActionsService {
       .orderBy('h.createdAt', 'ASC')
       .getMany();
   }
-
-
-  // 🟨 2. NOTIFICATIONS EXISTANTES (Email + Notification interne de validation/rejet)
-  if (ancienStatut !== statut && ['VALIDEE', 'REJETEE'].includes(statut)) {
-    const notifHelper = new NotificationHelper(this.notifService);
-    
-    // Notification interne pour le pilote
-    try {
-      await notifHelper.notifyActionStatutModifie(action.piloteId, statut, action.description, action.id);
-    } catch(e) { console.warn(e); }
-
-    // Votre logique Email Bull/Redis existante
-    if (action.pilote && action.pilote.email) {
-      try {
-        await this.mailService.sendActionStatusEmail(
-          action.pilote.email,
-          action.pilote.firstName,
-          action.description,
-          statut,
-          action.motifRejet,
-        );
-      } catch (e) { console.warn(e); }
-    }
-  }
-
-  return this.findById(saved.id);
-}
-
-
 }
