@@ -17,11 +17,12 @@ import Divider from "@mui/material/Divider";
 import Avatar from "@mui/material/Avatar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeadlineIndicator from "../../components/corrective-actions/DeadlineIndicator";
-import { correctiveActionService } from "../../services/correctiveActionService";
-import { useAuth } from "../../contexts/AuthContext";
 import ProofUpload from "../../components/corrective-actions/ProofUpload";
 import ActionComments from "../../components/corrective-actions/ActionComments";
+import { correctiveActionService } from "../../services/correctiveActionService";
+import { useAuth } from "../../contexts/AuthContext";
 
+// ─── Config ───────────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: any }> = {
   A_FAIRE: { label: "À faire", color: "default" },
   EN_COURS: { label: "En cours", color: "info" },
@@ -40,32 +41,36 @@ const CRIT_CONFIG: Record<
   BLOQUANT: { label: "Bloquant", color: "#C62828", bg: "#FFEBEE" },
 };
 
-const ALLOWED: Record<string, string[]> = {
-  PILOTE_ACTION: ["EN_COURS", "TERMINEE"],
-  AUDITEUR: ["EN_COURS", "TERMINEE", "VALIDEE", "REJETEE"],
-  ADMIN_HSEE: ["EN_COURS", "TERMINEE", "VALIDEE", "REJETEE"],
-};
-
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function ActionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isPilote = user?.role === "PILOTE_ACTION";
 
+  const isPilote = user?.role === "PILOTE_ACTION";
+  const isAdminOrAuditeur = ["ADMIN_HSEE", "AUDITEUR"].includes(
+    user?.role ?? "",
+  );
+
+  // ── State principal ────────────────────────────────────────────
   const [action, setAction] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [progression, setProgression] = useState(0);
+  const [history, setHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // ── State dialogs ──────────────────────────────────────────────
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [targetStatut, setTargetStatut] = useState("");
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [motifRejet, setMotifRejet] = useState("");
   const [motifError, setMotifError] = useState("");
-  const [history, setHistory] = useState<any[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
   const [validating, setValidating] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+
+  // ── Charger action ─────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
     correctiveActionService
@@ -78,12 +83,57 @@ export default function ActionDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // ── Charger historique ─────────────────────────────────────────
+  useEffect(() => {
+    if (!id) return;
+    correctiveActionService
+      .getHistory(id)
+      .then(setHistory)
+      .catch(() => {});
+  }, [id, action?.statut]);
+
+  // ── Progression automatique pilote (preuve ou commentaire) ─────
+  // Appelé uniquement si l'utilisateur est le pilote de l'action
+  const autoIncreaseProgression = async () => {
+    if (!action) return;
+    if (!["A_FAIRE", "EN_COURS"].includes(action.statut)) return;
+
+    // A_FAIRE → EN_COURS avec 10%
+    if (action.statut === "A_FAIRE") {
+      try {
+        const updated = await correctiveActionService.updateStatus(
+          action.id,
+          "EN_COURS",
+          10,
+        );
+        setAction(updated);
+        setProgression(10);
+      } catch {}
+      return;
+    }
+
+    // EN_COURS → +10% (max 90%)
+    const newProg = Math.min((action.progression ?? 0) + 10, 90);
+    if (newProg > (action.progression ?? 0)) {
+      try {
+        const updated = await correctiveActionService.updateStatus(
+          action.id,
+          "EN_COURS",
+          newProg,
+        );
+        setAction(updated);
+        setProgression(newProg);
+      } catch {}
+    }
+  };
+
+  // ── Handler statut pilote (Démarrer / Terminer) ────────────────
   const handleStatusClick = (statut: string) => {
     setTargetStatut(statut);
     setConfirmOpen(true);
   };
 
-  const handleConfirm = async () => {
+  const handleConfirmStatus = async () => {
     setSaving(true);
     setError("");
     try {
@@ -103,22 +153,15 @@ export default function ActionDetailPage() {
       setSaving(false);
     }
   };
-  useEffect(() => {
-    if (!id) return;
-    correctiveActionService
-      .getHistory(id)
-      .then(setHistory)
-      .catch(() => {});
-  }, [id, action?.statut]); // recharger quand statut change
 
-  // ── Handler Valider ────────────────────────────────────────────
+  // ── Handler valider (Admin/Auditeur) ───────────────────────────
   const handleValidate = async () => {
     setValidating(true);
     setError("");
     try {
       const updated = await correctiveActionService.validate(id!);
       setAction(updated);
-      setConfirmOpen(false);
+      setProgression(updated.progression ?? 100);
     } catch (err: any) {
       setError(err?.response?.data?.message || "Erreur lors de la validation.");
     } finally {
@@ -126,7 +169,7 @@ export default function ActionDetailPage() {
     }
   };
 
-  // ── Handler Rejeter ────────────────────────────────────────────
+  // ── Handler rejeter (Admin/Auditeur) ───────────────────────────
   const handleReject = async () => {
     if (!motifRejet.trim() || motifRejet.trim().length < 5) {
       setMotifError("Le motif est obligatoire (min 5 caractères).");
@@ -140,6 +183,7 @@ export default function ActionDetailPage() {
         motifRejet.trim(),
       );
       setAction(updated);
+      setProgression(updated.progression ?? 0);
       setRejectModalOpen(false);
       setMotifRejet("");
       setMotifError("");
@@ -150,6 +194,7 @@ export default function ActionDetailPage() {
     }
   };
 
+  // ── Loading / Error ────────────────────────────────────────────
   if (loading)
     return (
       <Box
@@ -164,42 +209,18 @@ export default function ActionDetailPage() {
   if (!action)
     return (
       <Box p={3}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{error || "Action introuvable."}</Alert>
       </Box>
     );
 
   const crit = CRIT_CONFIG[action.criticite] ?? CRIT_CONFIG.MODERE;
   const status = STATUS_CONFIG[action.statut] ?? STATUS_CONFIG.A_FAIRE;
-  const allowed = ALLOWED[user?.role ?? ""] ?? [];
-  const canUpdate = !isPilote || action.piloteId === user?.id;
 
-  // Boutons disponibles selon statut actuel
-  const statusButtons = [
-    {
-      statut: "EN_COURS",
-      label: "▶ Démarrer",
-      color: "info" as const,
-      show: allowed.includes("EN_COURS") && action.statut === "A_FAIRE",
-    },
-    {
-      statut: "TERMINEE",
-      label: "✓ Marquer terminée",
-      color: "warning" as const,
-      show: allowed.includes("TERMINEE") && action.statut === "EN_COURS",
-    },
-    {
-      statut: "VALIDEE",
-      label: "✅ Valider",
-      color: "success" as const,
-      show: allowed.includes("VALIDEE") && action.statut === "TERMINEE",
-    },
-    {
-      statut: "REJETEE",
-      label: "✗ Rejeter",
-      color: "error" as const,
-      show: allowed.includes("REJETEE") && action.statut === "TERMINEE",
-    },
-  ].filter((b) => b.show);
+  // Le pilote peut modifier seulement sa propre action
+  const isPiloteOwner = isPilote && action.piloteId === user?.id;
+
+  // Action clôturée (plus aucune modification possible)
+  const isActionClosed = ["VALIDEE", "REJETEE"].includes(action.statut);
 
   // Couleur barre progression
   const barColor =
@@ -207,7 +228,7 @@ export default function ActionDetailPage() {
 
   return (
     <Box maxWidth={700} mx="auto" pb={6}>
-      {/* Header */}
+      {/* ── Header ── */}
       <Box display="flex" alignItems="center" gap={1} mb={3}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -221,19 +242,19 @@ export default function ActionDetailPage() {
             Action corrective
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Détail et mise à jour
+            Détail et suivi
           </Typography>
         </Box>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}
         </Alert>
       )}
 
-      {/* Badges */}
-      <Box display="flex" gap={1.5} mb={3}>
+      {/* ── Badges statut + criticité ── */}
+      <Box display="flex" gap={1.5} mb={3} flexWrap="wrap">
         <Chip
           label={crit.label}
           sx={{ bgcolor: crit.bg, color: crit.color, fontWeight: 700 }}
@@ -246,7 +267,7 @@ export default function ActionDetailPage() {
         {action.domaine && <Chip label={action.domaine} variant="outlined" />}
       </Box>
 
-      {/* Description */}
+      {/* ── Description + Anomalie + Critères ── */}
       <Card
         elevation={0}
         sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
@@ -297,10 +318,19 @@ export default function ActionDetailPage() {
               </Typography>
             </>
           )}
+
+          {action.motifRejet && (
+            <>
+              <Divider sx={{ my: 1.5 }} />
+              <Alert severity="warning">
+                <strong>Motif du dernier rejet :</strong> {action.motifRejet}
+              </Alert>
+            </>
+          )}
         </CardContent>
       </Card>
 
-      {/* Deadline */}
+      {/* ── Deadline ── */}
       <Card
         elevation={0}
         sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
@@ -321,287 +351,183 @@ export default function ActionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Progression + Statut */}
-      {canUpdate && !["VALIDEE", "REJETEE"].includes(action.statut) && (
-        <Card
-          elevation={0}
-          sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
-        >
-          <CardContent sx={{ p: 3 }}>
-            <Typography
-              variant="subtitle2"
-              fontWeight={600}
-              color="text.secondary"
-              mb={2}
+      {/* ── PROGRESSION ── */}
+      <Card
+        elevation={0}
+        sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
+      >
+        <CardContent sx={{ p: 3 }}>
+          <Typography
+            variant="subtitle2"
+            fontWeight={600}
+            color="text.secondary"
+            mb={2}
+          >
+            AVANCEMENT
+          </Typography>
+
+          {/* Barre de progression — visible pour TOUS (Admin, Auditeur, Pilote) */}
+          <Box mb={2}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={1}
             >
-              MISE À JOUR DE L'AVANCEMENT
-            </Typography>
+              <Typography variant="body2" fontWeight={500}>
+                Progression
+              </Typography>
+              <Typography variant="h6" fontWeight={700} color={barColor}>
+                {progression}%
+              </Typography>
+            </Box>
 
-            {/* ← Range input natif — pas de Slider MUI */}
-            <Box mb={3}>
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1}
-              >
-                <Typography variant="body2">Progression</Typography>
-                <Typography
-                  variant="body2"
-                  fontWeight={700}
-                  color="primary.main"
-                >
-                  {progression}%
-                </Typography>
-              </Box>
-
-              {/* Barre visuelle */}
+            {/* Barre visuelle — TOUS la voient */}
+            <Box
+              sx={{
+                height: 10,
+                borderRadius: 5,
+                bgcolor: "grey.200",
+                overflow: "hidden",
+                mb: 0.5,
+              }}
+            >
               <Box
                 sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: "grey.200",
-                  overflow: "hidden",
-                  mb: 1,
+                  height: "100%",
+                  width: `${progression}%`,
+                  bgcolor: barColor,
+                  borderRadius: 5,
+                  transition: "width .4s ease",
                 }}
-              >
-                <Box
-                  sx={{
-                    height: "100%",
-                    width: `${progression}%`,
-                    bgcolor: barColor,
-                    borderRadius: 4,
-                    transition: "width .2s",
+              />
+            </Box>
+            <Box display="flex" justifyContent="space-between">
+              {["0%", "25%", "50%", "75%", "100%"].map((v) => (
+                <Typography
+                  key={v}
+                  variant="caption"
+                  color="text.disabled"
+                  fontSize={10}
+                >
+                  {v}
+                </Typography>
+              ))}
+            </Box>
+
+            {/* Slider — UNIQUEMENT pour le pilote propriétaire, action non clôturée */}
+            {isPiloteOwner && !isActionClosed && (
+              <Box mt={1.5}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  mb={0.5}
+                >
+                  Faites glisser pour mettre à jour votre progression :
+                </Typography>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={progression}
+                  onChange={(e) => setProgression(Number(e.target.value))}
+                  style={{
+                    width: "100%",
+                    cursor: "pointer",
+                    accentColor: barColor,
                   }}
                 />
               </Box>
-
-              {/* Range input natif */}
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={5}
-                value={progression}
-                onChange={(e) => setProgression(Number(e.target.value))}
-                style={{
-                  width: "100%",
-                  cursor: "pointer",
-                  accentColor: barColor,
-                }}
-              />
-              <Box display="flex" justifyContent="space-between">
-                <Typography variant="caption" color="text.secondary">
-                  0%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  25%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  50%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  75%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  100%
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Boutons statut */}
-            {/* ── Boutons Valider / Rejeter (Admin/Auditeur seulement, si TERMINEE) ── */}
-            {!isPilote && action.statut === "TERMINEE" && (
-              <Card
-                elevation={0}
-                sx={{
-                  border: "1px solid",
-                  borderColor: "success.light",
-                  mb: 2,
-                  bgcolor: "#F1F8E9",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={600}
-                    color="success.dark"
-                    mb={1}
-                  >
-                    ✅ VALIDATION HSEE
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>
-                    Le pilote a marqué cette action comme terminée. Vérifiez les
-                    preuves et validez ou rejetez.
-                  </Typography>
-
-                  {action.motifRejet && (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                      <strong>Précédent motif de rejet :</strong>{" "}
-                      {action.motifRejet}
-                    </Alert>
-                  )}
-
-                  <Box display="flex" gap={1.5}>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      size="large"
-                      onClick={() => setConfirmOpen(true)}
-                      disabled={validating}
-                      sx={{ flex: 1 }}
-                    >
-                      {validating ? (
-                        <CircularProgress size={20} color="inherit" />
-                      ) : (
-                        "✅ Valider l'action"
-                      )}
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="large"
-                      onClick={() => setRejectModalOpen(true)}
-                      disabled={rejecting}
-                      sx={{ flex: 1 }}
-                    >
-                      ✗ Rejeter
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
             )}
 
-            {/* ── Historique des statuts ── */}
-            <Card
-              elevation={0}
-              sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => setShowHistory((p) => !p)}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={600}
-                    color="text.secondary"
+            {/* Message lecture seule pour Admin/Auditeur */}
+            {isAdminOrAuditeur && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                mt={1}
+              >
+                ℹ️ La progression est mise à jour par le pilote d'action.
+              </Typography>
+            )}
+          </Box>
+
+          <Divider sx={{ mb: 2 }} />
+
+          {/* ── BOUTONS PILOTE : Démarrer + Terminer ── */}
+          {isPiloteOwner && !isActionClosed && (
+            <Box>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+                display="block"
+                mb={1}
+              >
+                ACTIONS DISPONIBLES
+              </Typography>
+              <Box display="flex" gap={1} flexWrap="wrap">
+                {/* Bouton Démarrer — visible seulement si A_FAIRE */}
+                {action.statut === "A_FAIRE" && (
+                  <Button
+                    variant="contained"
+                    color="info"
+                    size="small"
+                    onClick={() => handleStatusClick("EN_COURS")}
                   >
-                    HISTORIQUE DES STATUTS ({history.length})
-                  </Typography>
-                  <Typography variant="caption">
-                    {showHistory ? "▲" : "▼"}
-                  </Typography>
-                </Box>
-
-                {showHistory && (
-                  <Box mt={1.5} display="flex" flexDirection="column" gap={1}>
-                    {history.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Aucun historique.
-                      </Typography>
-                    ) : (
-                      history.map((h, idx) => {
-                        const STATUS_LABELS: Record<string, string> = {
-                          A_FAIRE: "À faire",
-                          EN_COURS: "En cours",
-                          TERMINEE: "Terminée",
-                          VALIDEE: "Validée",
-                          REJETEE: "Rejetée",
-                        };
-                        return (
-                          <Box
-                            key={h.id}
-                            display="flex"
-                            alignItems="flex-start"
-                            gap={1.5}
-                            sx={{
-                              pb: 1,
-                              borderBottom:
-                                idx < history.length - 1
-                                  ? "0.5px solid"
-                                  : "none",
-                              borderColor: "divider",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: "50%",
-                                bgcolor: "primary.main",
-                                mt: 0.75,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Box flex={1}>
-                              <Typography variant="body2">
-                                <strong>
-                                  {STATUS_LABELS[h.fromStatut] ?? h.fromStatut}
-                                </strong>
-                                {" → "}
-                                <strong>
-                                  {STATUS_LABELS[h.toStatut] ?? h.toStatut}
-                                </strong>
-                              </Typography>
-                              {h.motif && (
-                                <Typography
-                                  variant="caption"
-                                  color="error.main"
-                                  display="block"
-                                >
-                                  Motif : {h.motif}
-                                </Typography>
-                              )}
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {h.changedBy?.firstName} {h.changedBy?.lastName}{" "}
-                                ·{" "}
-                                {new Date(h.createdAt).toLocaleString("fr-FR", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        );
-                      })
-                    )}
-                  </Box>
+                    ▶ Démarrer
+                  </Button>
                 )}
-              </CardContent>
-            </Card>
 
-            {/* ── Dialog confirmation VALIDATION ── */}
-            <Dialog
-              open={confirmOpen}
-              onClose={() => setConfirmOpen(false)}
-              maxWidth="xs"
-              fullWidth
+                {/* Bouton Terminer — visible si A_FAIRE ou EN_COURS */}
+                {["A_FAIRE", "EN_COURS"].includes(action.statut) && (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    size="small"
+                    onClick={() => handleStatusClick("TERMINEE")}
+                  >
+                    ✓ Marquer comme terminée
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          {/* ── BOUTONS ADMIN/AUDITEUR : Valider + Rejeter ── */}
+          {/* Visibles UNIQUEMENT quand le pilote a marqué l'action TERMINEE */}
+          {isAdminOrAuditeur && action.statut === "TERMINEE" && (
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                bgcolor: "#F1F8E9",
+                border: "1px solid",
+                borderColor: "success.light",
+              }}
             >
-              <DialogTitle>Confirmer la validation</DialogTitle>
-              <DialogContent>
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  L'anomalie associée sera automatiquement{" "}
-                  <strong>clôturée</strong>.
-                </Alert>
-                <Typography variant="body2">
-                  Confirmez-vous que l'action{" "}
-                  <strong>"{action?.description}"</strong> a été réalisée
-                  efficacement et peut être validée ?
-                </Typography>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setConfirmOpen(false)} color="inherit">
-                  Annuler
-                </Button>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                color="success.dark"
+                display="block"
+                mb={0.5}
+              >
+                ✅ VALIDATION HSEE REQUISE
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                mb={1.5}
+              >
+                Le pilote a marqué cette action comme terminée. Vérifiez les
+                preuves et les commentaires avant de valider.
+              </Typography>
+              <Box display="flex" gap={1} flexWrap="wrap">
                 <Button
                   variant="contained"
                   color="success"
@@ -611,104 +537,33 @@ export default function ActionDetailPage() {
                   {validating ? (
                     <CircularProgress size={18} color="inherit" />
                   ) : (
-                    "✅ Confirmer la validation"
+                    "✅ Valider l'action"
                   )}
                 </Button>
-              </DialogActions>
-            </Dialog>
-
-            {/* ── Modal REJET avec motif obligatoire ── */}
-            <Dialog
-              open={rejectModalOpen}
-              onClose={() => {
-                setRejectModalOpen(false);
-                setMotifRejet("");
-                setMotifError("");
-              }}
-              maxWidth="xs"
-              fullWidth
-            >
-              <DialogTitle>
-                <Typography variant="h6" fontWeight={700} color="error.main">
-                  ✗ Rejeter l'action corrective
-                </Typography>
-              </DialogTitle>
-              <DialogContent>
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  Le pilote sera notifié par email. L'action repassera au statut{" "}
-                  <strong>En cours</strong>.
-                </Alert>
-                <Typography variant="body2" color="text.secondary" mb={1.5}>
-                  Indiquez le motif du rejet pour que le pilote sache quoi
-                  corriger :
-                </Typography>
-                <textarea
-                  value={motifRejet}
-                  onChange={(e) => {
-                    setMotifRejet(e.target.value);
-                    setMotifError("");
-                  }}
-                  placeholder="Ex: Les preuves fournies sont insuffisantes. Joindre le rapport de test de la ventilation."
-                  rows={4}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: motifError ? "1px solid #F44336" : "1px solid #ddd",
-                    borderRadius: 8,
-                    fontFamily: "inherit",
-                    fontSize: 14,
-                    resize: "vertical",
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
-                {motifError && (
-                  <Typography
-                    variant="caption"
-                    color="error.main"
-                    display="block"
-                    mt={0.5}
-                  >
-                    {motifError}
-                  </Typography>
-                )}
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  mt={0.5}
-                >
-                  {motifRejet.length}/500 caractères
-                </Typography>
-              </DialogContent>
-              <DialogActions>
                 <Button
-                  onClick={() => {
-                    setRejectModalOpen(false);
-                    setMotifRejet("");
-                    setMotifError("");
-                  }}
-                  color="inherit"
-                >
-                  Annuler
-                </Button>
-                <Button
-                  variant="contained"
+                  variant="outlined"
                   color="error"
-                  onClick={handleReject}
-                  disabled={rejecting || motifRejet.trim().length < 5}
+                  onClick={() => setRejectModalOpen(true)}
+                  disabled={rejecting}
                 >
-                  {rejecting ? (
-                    <CircularProgress size={18} color="inherit" />
-                  ) : (
-                    "Confirmer le rejet"
-                  )}
+                  ✗ Rejeter
                 </Button>
-              </DialogActions>
-            </Dialog>
-          </CardContent>
-        </Card>
-      )}
+              </Box>
+            </Box>
+          )}
+
+          {/* Message si action clôturée */}
+          {isActionClosed && (
+            <Alert severity={action.statut === "VALIDEE" ? "success" : "error"}>
+              {action.statut === "VALIDEE"
+                ? "✅ Action validée. L'anomalie associée a été clôturée."
+                : "✗ Action rejetée. Le pilote doit reprendre le travail."}
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── PREUVES ── */}
       <Card
         elevation={0}
         sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
@@ -728,16 +583,25 @@ export default function ActionDetailPage() {
               PREUVES DE RÉALISATION
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Photos, PDF, certificats
+              Photos · PDF · Certificats
             </Typography>
           </Box>
-
           <ProofUpload
             actionId={action.id}
-            readonly={["VALIDEE", "REJETEE"].includes(action.statut)}
+            // Admin/Auditeur voient les preuves en lecture seule
+            // Pilote peut uploader sauf si action clôturée
+            readonly={isAdminOrAuditeur || isActionClosed}
+            // Quand le pilote upload une preuve → progression auto +10%
+            onUpload={
+              isPiloteOwner && !isActionClosed
+                ? autoIncreaseProgression
+                : undefined
+            }
           />
         </CardContent>
       </Card>
+
+      {/* ── COMMENTAIRES ── */}
       <Card
         elevation={0}
         sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
@@ -747,12 +611,21 @@ export default function ActionDetailPage() {
             actionId={action.id}
             piloteId={action.piloteId}
             createdById={action.createdById}
+            // Quand le pilote commente → progression auto +10%
+            onComment={
+              isPiloteOwner && !isActionClosed
+                ? autoIncreaseProgression
+                : undefined
+            }
           />
         </CardContent>
       </Card>
 
-      {/* Intervenants */}
-      <Card elevation={0} sx={{ border: "1px solid", borderColor: "divider" }}>
+      {/* ── INTERVENANTS ── */}
+      <Card
+        elevation={0}
+        sx={{ border: "1px solid", borderColor: "divider", mb: 2 }}
+      >
         <CardContent sx={{ p: 3 }}>
           <Typography
             variant="subtitle2"
@@ -814,7 +687,101 @@ export default function ActionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Dialog confirmation */}
+      {/* ── HISTORIQUE ── */}
+      <Card elevation={0} sx={{ border: "1px solid", borderColor: "divider" }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ cursor: "pointer" }}
+            onClick={() => setShowHistory((p) => !p)}
+          >
+            <Typography
+              variant="subtitle2"
+              fontWeight={600}
+              color="text.secondary"
+            >
+              HISTORIQUE DES STATUTS ({history.length})
+            </Typography>
+            <Typography variant="caption">{showHistory ? "▲" : "▼"}</Typography>
+          </Box>
+
+          {showHistory && (
+            <Box mt={1.5} display="flex" flexDirection="column" gap={1}>
+              {history.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Aucun changement de statut enregistré.
+                </Typography>
+              ) : (
+                history.map((h, idx) => {
+                  const LABELS: Record<string, string> = {
+                    A_FAIRE: "À faire",
+                    EN_COURS: "En cours",
+                    TERMINEE: "Terminée",
+                    VALIDEE: "Validée",
+                    REJETEE: "Rejetée",
+                  };
+                  return (
+                    <Box
+                      key={h.id}
+                      display="flex"
+                      alignItems="flex-start"
+                      gap={1.5}
+                      sx={{
+                        pb: 1,
+                        borderBottom:
+                          idx < history.length - 1 ? "0.5px solid" : "none",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: "primary.main",
+                          mt: 0.75,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Box flex={1}>
+                        <Typography variant="body2">
+                          <strong>
+                            {LABELS[h.fromStatut] ?? h.fromStatut}
+                          </strong>
+                          {" → "}
+                          <strong>{LABELS[h.toStatut] ?? h.toStatut}</strong>
+                        </Typography>
+                        {h.motif && (
+                          <Typography
+                            variant="caption"
+                            color="error.main"
+                            display="block"
+                          >
+                            Motif : {h.motif}
+                          </Typography>
+                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          {h.changedBy?.firstName} {h.changedBy?.lastName} ·{" "}
+                          {new Date(h.createdAt).toLocaleString("fr-FR", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })
+              )}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Dialog confirmation PILOTE (Démarrer / Terminer) ── */}
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
@@ -829,17 +796,9 @@ export default function ActionDetailPage() {
             progression de <strong>{progression}%</strong> ?
           </Typography>
           {targetStatut === "TERMINEE" && (
-            <Alert severity="info">
-              La progression passera automatiquement à 100%.
+            <Alert severity="info" sx={{ mt: 1 }}>
+              La progression passera automatiquement à <strong>100%</strong>.
             </Alert>
-          )}
-          {targetStatut === "VALIDEE" && (
-            <Alert severity="success">
-              L'anomalie sera automatiquement clôturée.
-            </Alert>
-          )}
-          {targetStatut === "REJETEE" && (
-            <Alert severity="warning">Le pilote sera notifié du rejet.</Alert>
           )}
         </DialogContent>
         <DialogActions>
@@ -849,13 +808,114 @@ export default function ActionDetailPage() {
           <Button
             variant="contained"
             color={STATUS_CONFIG[targetStatut]?.color ?? "primary"}
-            onClick={handleConfirm}
+            onClick={handleConfirmStatus}
             disabled={saving}
           >
             {saving ? (
               <CircularProgress size={18} color="inherit" />
             ) : (
               "Confirmer"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Dialog confirmation VALIDATION (Admin/Auditeur) ── */}
+      <Dialog open={validating} maxWidth="xs" fullWidth>
+        <DialogContent>
+          <Box display="flex" justifyContent="center" py={2}>
+            <CircularProgress />
+          </Box>
+          <Typography textAlign="center" variant="body2">
+            Validation en cours...
+          </Typography>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal REJET avec motif obligatoire ── */}
+      <Dialog
+        open={rejectModalOpen}
+        onClose={() => {
+          setRejectModalOpen(false);
+          setMotifRejet("");
+          setMotifError("");
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={700} color="error.main">
+            ✗ Rejeter l'action corrective
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Le pilote sera notifié par email. L'action repassera au statut{" "}
+            <strong>En cours</strong>.
+          </Alert>
+          <Typography variant="body2" color="text.secondary" mb={1.5}>
+            Motif du rejet (obligatoire — min 5 caractères) :
+          </Typography>
+          <textarea
+            value={motifRejet}
+            onChange={(e) => {
+              setMotifRejet(e.target.value);
+              setMotifError("");
+            }}
+            placeholder="Ex: Les preuves fournies sont insuffisantes. Joindre le rapport de test de la ventilation."
+            rows={4}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: motifError ? "1px solid #F44336" : "1px solid #ddd",
+              borderRadius: 8,
+              fontFamily: "inherit",
+              fontSize: 14,
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          {motifError && (
+            <Typography
+              variant="caption"
+              color="error.main"
+              display="block"
+              mt={0.5}
+            >
+              {motifError}
+            </Typography>
+          )}
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            display="block"
+            mt={0.5}
+          >
+            {motifRejet.length} / 500 caractères
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setRejectModalOpen(false);
+              setMotifRejet("");
+              setMotifError("");
+            }}
+            color="inherit"
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleReject}
+            disabled={rejecting || motifRejet.trim().length < 5}
+          >
+            {rejecting ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              "Confirmer le rejet"
             )}
           </Button>
         </DialogActions>

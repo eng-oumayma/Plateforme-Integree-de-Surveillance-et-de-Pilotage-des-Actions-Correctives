@@ -67,37 +67,36 @@ export class Inspection {
   planId?: string;
 
   // ── Champs de clôture (US7) ──────────────────────────────────────────────
- 
+
   /** ID de l'auditeur qui a clôturé */
   @Column({ nullable: true })
-  closedById: string | null;
- 
+  closedById!: string | null;
+
   @ManyToOne(() => User, { eager: false, nullable: true })
   @JoinColumn({ name: 'closedById' })
-  closedBy: User;
- 
+  closedBy!: User;
+
   /** Date/heure de clôture */
   @Column({ type: 'timestamp', nullable: true })
-  closedAt: Date | null;
- 
+  closedAt!: Date | null;
+
   /** Durée de l'inspection en minutes (closedAt - timestamp) */
   @Column({ type: 'int', nullable: true })
-  durationMinutes: number | null;
- 
+  durationMinutes!: number | null;
+
   /** Score checklist (0-100) calculé à la clôture */
   @Column({ type: 'float', nullable: true })
-  score: number | null;
- 
+  score!: number | null;
+
   /** Nombre de questions répondues à la clôture */
   @Column({ type: 'int', nullable: true })
-  itemsAnswered: number | null;
- 
+  itemsAnswered!: number | null;
+
   /** Nombre total de questions de la checklist */
   @Column({ type: 'int', nullable: true })
-  itemsTotal: number | null;
- 
+  itemsTotal!: number | null;
+
   /** Nombre d'anomalies détectées */
   @Column({ type: 'int', nullable: true, default: 0 })
-  anomaliesCount: number | null;
- 
+  anomaliesCount!: number | null;
 }

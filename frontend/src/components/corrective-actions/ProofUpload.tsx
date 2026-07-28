@@ -23,6 +23,7 @@ type Proof = {
 type Props = {
   actionId: string;
   readonly?: boolean;
+  onUpload?: () => void;
 };
 
 function formatSize(bytes: number): string {
@@ -35,7 +36,11 @@ function isImage(proof: Proof): boolean {
   return proof.type === "PHOTO" || proof.mimetype?.startsWith("image/");
 }
 
-export default function ProofUpload({ actionId, readonly = false }: Props) {
+export default function ProofUpload({
+  actionId,
+  readonly = false,
+  onUpload,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
@@ -65,6 +70,7 @@ export default function ProofUpload({ actionId, readonly = false }: Props) {
     try {
       const proof = await correctiveActionService.uploadProof(actionId, file);
       setProofs((prev) => [...prev, proof]);
+      onUpload?.();
     } catch (err: any) {
       setError(err?.response?.data?.message || "Erreur lors de l'upload.");
     } finally {

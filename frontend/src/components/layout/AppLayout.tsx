@@ -39,7 +39,9 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useAuth } from "../../contexts/AuthContext";
 import InactivityDialog from "../common/InactivityDialog";
-import NotificationBell from '../notifications/NotificationBell';
+import NotificationBell from "../notifications/NotificationBell";
+import HseeChat from "../chat/HseeChat";
+
 const DRAWER_WIDTH = 200;
 
 const ROLE_LABELS: Record<string, string> = {
@@ -99,8 +101,16 @@ const NAV_STRUCTURE: any[] = [
     roles: ["ADMIN_HSEE"],
     children: [
       { label: "Calendrier 52 sem.", Icon: EventRepeatIcon, path: "/planning" },
-      { label: "Calendrier Réglementaire", Icon: CalendarMonthIcon, path: "/planning/unified" },
-      { label: "Nouveau plan", Icon: AddCircleOutlineIcon, path: "/planning/new" },
+      {
+        label: "Calendrier Réglementaire",
+        Icon: CalendarMonthIcon,
+        path: "/planning/unified",
+      },
+      {
+        label: "Nouveau plan",
+        Icon: AddCircleOutlineIcon,
+        path: "/planning/new",
+      },
     ],
   },
   {
@@ -159,8 +169,6 @@ const NAV_STRUCTURE: any[] = [
     path: "/admin/config-alertes",
     roles: ["ADMIN_HSEE"],
   },
-
- 
 ];
 
 const BREADCRUMB_MAP: Record<string, string> = {
@@ -205,7 +213,7 @@ export default function AppLayout() {
 
   const currentBreadcrumb =
     Object.entries(BREADCRUMB_MAP).find(([path]) =>
-      location.pathname.startsWith(path)
+      location.pathname.startsWith(path),
     )?.[1] ?? "";
 
   const handleLogout = () => {
@@ -218,11 +226,29 @@ export default function AppLayout() {
   const drawerContent = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Logo */}
-      <Box sx={{ px: 2.5, py: 2, borderBottom: "1px solid", borderColor: "divider" }}>
-        <Typography variant="h6" fontWeight={700} color="primary" letterSpacing={-0.5}>
+      <Box
+        sx={{
+          px: 2.5,
+          py: 2,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          color="primary"
+          letterSpacing={-0.5}
+        >
           HSEE
-          <Typography component="span" variant="h6" fontWeight={400} color="text.secondary">
-            {" "}Platform
+          <Typography
+            component="span"
+            variant="h6"
+            fontWeight={400}
+            color="text.secondary"
+          >
+            {" "}
+            Platform
           </Typography>
         </Typography>
         <Typography variant="caption" color="text.secondary">
@@ -238,7 +264,10 @@ export default function AppLayout() {
           // Séparateur
           if (item.type === "divider") {
             return (
-              <Box key={`div-${idx}`} sx={{ px: 1.5, pt: idx === 0 ? 0.5 : 1.5, pb: 0.5 }}>
+              <Box
+                key={`div-${idx}`}
+                sx={{ px: 1.5, pt: idx === 0 ? 0.5 : 1.5, pb: 0.5 }}
+              >
                 <Typography
                   variant="caption"
                   fontWeight={700}
@@ -255,7 +284,9 @@ export default function AppLayout() {
           if (item.type === "group") {
             const { Icon } = item;
             const isOpen = openGroups[item.label] ?? false;
-            const anyChildActive = item.children?.some((c: any) => isActive(c.path));
+            const anyChildActive = item.children?.some((c: any) =>
+              isActive(c.path),
+            );
             return (
               <Box key={`group-${idx}`}>
                 <ListItemButton
@@ -263,14 +294,26 @@ export default function AppLayout() {
                   selected={anyChildActive}
                   sx={{ borderRadius: 1.5, mb: 0.25 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36, color: anyChildActive ? "primary.main" : "text.secondary" }}>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 36,
+                      color: anyChildActive ? "primary.main" : "text.secondary",
+                    }}
+                  >
                     <Icon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
-                    primaryTypographyProps={{ fontSize: 14, fontWeight: anyChildActive ? 600 : 400 }}
+                    primaryTypographyProps={{
+                      fontSize: 14,
+                      fontWeight: anyChildActive ? 600 : 400,
+                    }}
                   />
-                  {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                  {isOpen ? (
+                    <ExpandLessIcon fontSize="small" />
+                  ) : (
+                    <ExpandMoreIcon fontSize="small" />
+                  )}
                 </ListItemButton>
 
                 <Collapse in={isOpen} timeout="auto" unmountOnExit>
@@ -282,15 +325,26 @@ export default function AppLayout() {
                         <ListItemButton
                           key={child.path}
                           selected={active}
-                          onClick={() => { navigate(child.path); setMobileOpen(false); }}
+                          onClick={() => {
+                            navigate(child.path);
+                            setMobileOpen(false);
+                          }}
                           sx={{ borderRadius: 1.5, mb: 0.25, py: 0.75 }}
                         >
-                          <ListItemIcon sx={{ minWidth: 30, color: active ? "primary.main" : "text.secondary" }}>
+                          <ListItemIcon
+                            sx={{
+                              minWidth: 30,
+                              color: active ? "primary.main" : "text.secondary",
+                            }}
+                          >
                             <ChildIcon sx={{ fontSize: 18 }} />
                           </ListItemIcon>
                           <ListItemText
                             primary={child.label}
-                            primaryTypographyProps={{ fontSize: 13, fontWeight: active ? 600 : 400 }}
+                            primaryTypographyProps={{
+                              fontSize: 13,
+                              fontWeight: active ? 600 : 400,
+                            }}
                           />
                         </ListItemButton>
                       );
@@ -308,15 +362,26 @@ export default function AppLayout() {
             <ListItemButton
               key={`${item.path}-${idx}`}
               selected={active}
-              onClick={() => { navigate(item.path); setMobileOpen(false); }}
+              onClick={() => {
+                navigate(item.path);
+                setMobileOpen(false);
+              }}
               sx={{ borderRadius: 1.5, mb: 0.25 }}
             >
-              <ListItemIcon sx={{ minWidth: 36, color: active ? "primary.main" : "text.secondary" }}>
+              <ListItemIcon
+                sx={{
+                  minWidth: 36,
+                  color: active ? "primary.main" : "text.secondary",
+                }}
+              >
                 <Icon fontSize="small" />
               </ListItemIcon>
               <ListItemText
                 primary={item.label}
-                primaryTypographyProps={{ fontSize: 14, fontWeight: active ? 600 : 400 }}
+                primaryTypographyProps={{
+                  fontSize: 14,
+                  fontWeight: active ? 600 : 400,
+                }}
               />
             </ListItemButton>
           );
@@ -327,17 +392,36 @@ export default function AppLayout() {
       {user && (
         <Box
           onClick={() => setProfileOpen(true)}
-          sx={{ p: 2, borderTop: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
+          sx={{
+            p: 2,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            cursor: "pointer",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
         >
           <Box display="flex" alignItems="center" gap={1.5}>
-            <Avatar src={user.avatarUrl} sx={{ width: 36, height: 36, bgcolor: "primary.main", fontSize: 13 }}>
+            <Avatar
+              src={user.avatarUrl}
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: "primary.main",
+                fontSize: 13,
+              }}
+            >
               {initials}
             </Avatar>
             <Box flex={1} minWidth={0}>
               <Typography variant="body2" fontWeight={600} noWrap>
                 {user.firstName} {user.lastName}
               </Typography>
-              <Chip label={roleLabel} size="small" color={roleColor as any} sx={{ height: 18, fontSize: 10 }} />
+              <Chip
+                label={roleLabel}
+                size="small"
+                color={roleColor as any}
+                sx={{ height: 18, fontSize: 10 }}
+              />
             </Box>
           </Box>
         </Box>
@@ -352,11 +436,17 @@ export default function AppLayout() {
         variant="permanent"
         sx={{
           display: { xs: "none", md: "block" },
-          "& .MuiDrawer-paper": { width: DRAWER_WIDTH, boxSizing: "border-box", borderRight: "1px solid", borderColor: "divider" },
+          "& .MuiDrawer-paper": {
+            width: DRAWER_WIDTH,
+            boxSizing: "border-box",
+            borderRight: "1px solid",
+            borderColor: "divider",
+          },
         }}
       >
         {drawerContent}
       </Drawer>
+      <HseeChat />
 
       {/* Sidebar Mobile */}
       <Drawer
@@ -373,29 +463,55 @@ export default function AppLayout() {
       </Drawer>
 
       {/* Zone principale */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", ml: { md: `${DRAWER_WIDTH}px` }, minWidth: 0 }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          ml: { md: `${DRAWER_WIDTH}px` },
+          minWidth: 0,
+        }}
+      >
         {/* AppBar */}
-        <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
+        <AppBar
+          position="static"
+          color="inherit"
+          elevation={0}
+          sx={{ borderBottom: "1px solid", borderColor: "divider" }}
+        >
           <Toolbar>
-            <IconButton sx={{ display: { md: "none" }, mr: 1 }} onClick={() => setMobileOpen(true)}>
+            <IconButton
+              sx={{ display: { md: "none" }, mr: 1 }}
+              onClick={() => setMobileOpen(true)}
+            >
               <MenuIcon />
             </IconButton>
 
             {currentBreadcrumb && (
-              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ display: { xs: "none", sm: "block" } }}
+              >
                 {currentBreadcrumb}
               </Typography>
             )}
 
             <Box flex={1} />
 
-           
-
-             <NotificationBell />
+            <NotificationBell />
 
             <Tooltip title="Mon profil">
               <IconButton onClick={() => setProfileOpen(true)} size="small">
-                <Avatar src={user?.avatarUrl} sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: 12 }}>
+                <Avatar
+                  src={user?.avatarUrl}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "primary.main",
+                    fontSize: 12,
+                  }}
+                >
                   {initials}
                 </Avatar>
               </IconButton>
@@ -410,10 +526,23 @@ export default function AppLayout() {
       </Box>
 
       {/* Dialog profil */}
-      <Dialog open={profileOpen} onClose={() => setProfileOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle sx={{ pb: 1 }}>
           <Box display="flex" alignItems="center" gap={2}>
-            <Avatar src={user?.avatarUrl} sx={{ width: 48, height: 48, bgcolor: "primary.main", fontSize: 18 }}>
+            <Avatar
+              src={user?.avatarUrl}
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: "primary.main",
+                fontSize: 18,
+              }}
+            >
               {initials}
             </Avatar>
             <Box>
@@ -424,7 +553,12 @@ export default function AppLayout() {
                 {user?.email}
               </Typography>
               <Box mt={0.5}>
-                <Chip label={roleLabel} size="small" color={roleColor as any} sx={{ height: 18, fontSize: 10 }} />
+                <Chip
+                  label={roleLabel}
+                  size="small"
+                  color={roleColor as any}
+                  sx={{ height: 18, fontSize: 10 }}
+                />
               </Box>
             </Box>
           </Box>
@@ -435,7 +569,10 @@ export default function AppLayout() {
         <DialogContent sx={{ py: 1, px: 2 }}>
           <ListItemButton
             sx={{ borderRadius: 1.5 }}
-            onClick={() => { setProfileOpen(false); navigate("/profile"); }}
+            onClick={() => {
+              setProfileOpen(false);
+              navigate("/profile");
+            }}
           >
             <ListItemIcon sx={{ minWidth: 36 }}>
               <AccountCircleIcon fontSize="small" />
@@ -447,8 +584,15 @@ export default function AppLayout() {
         <Divider />
 
         <DialogActions sx={{ px: 2, py: 1.5 }}>
-          <Button onClick={() => setProfileOpen(false)} color="inherit">Fermer</Button>
-          <Button onClick={handleLogout} variant="contained" color="error" startIcon={<LogoutIcon />}>
+          <Button onClick={() => setProfileOpen(false)} color="inherit">
+            Fermer
+          </Button>
+          <Button
+            onClick={handleLogout}
+            variant="contained"
+            color="error"
+            startIcon={<LogoutIcon />}
+          >
             Se déconnecter
           </Button>
         </DialogActions>

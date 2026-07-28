@@ -31,6 +31,7 @@ type Props = {
   actionId: string;
   piloteId: string;
   createdById: string;
+  onComment?: () => void;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ export default function ActionComments({
   actionId,
   piloteId,
   createdById,
+  onComment,
 }: Props) {
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -209,6 +211,7 @@ export default function ActionComments({
         selectedMentions.map((m) => m.id),
       );
       setComments((prev) => [...prev, newComment]);
+      onComment?.();
       setMessage("");
       setSelectedMentions([]);
     } catch (err: any) {

@@ -31,7 +31,7 @@ import { RegulatoryEvent } from './regulatory-events/entities/regulatory-event.e
 import { ActionComment } from './corrective-actions/action-comment.entity';
 
 import { NotificationsModule } from './notifications/notifications.module';
-import { Notification } from './notifications/notification.entity';   
+import { Notification } from './notifications/notification.entity';
 import { Not } from 'typeorm';
 import { BullModule } from '@nestjs/bull';
 import { AlertsModule } from './alerts/alerts.module';
@@ -79,8 +79,6 @@ import { AlertsModule } from './alerts/alerts.module';
           CorrectiveAction,
           RegulatoryEvent,
           Notification,
-
-
         ],
         synchronize: true,
         logging: false,
@@ -96,10 +94,7 @@ import { AlertsModule } from './alerts/alerts.module';
     CorrectiveActionsModule,
     RegulatoryEventsModule,
 
-
     NotificationsModule,
-   
-
   ],
 })
 export class AppModule {}
