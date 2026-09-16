@@ -15,7 +15,6 @@ import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import Divider from '@mui/material/Divider';
 import Avatar from '@mui/material/Avatar';
-import Chip from '@mui/material/Chip';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';

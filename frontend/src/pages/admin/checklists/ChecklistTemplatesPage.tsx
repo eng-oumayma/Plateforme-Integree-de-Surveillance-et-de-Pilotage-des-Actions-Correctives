@@ -27,7 +27,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { checklistService } from "../../../services/checklistService";
 
 import { useAuth } from "../../../contexts/AuthContext";

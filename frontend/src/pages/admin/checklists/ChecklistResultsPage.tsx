@@ -23,7 +23,6 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import PhotoIcon from "@mui/icons-material/Photo";
 import ScoreHistoryChart from "../../../components/checklists/ScoreHistoryChart";
 import { checklistResponseService } from "../../../services/checklistResponseService";
 

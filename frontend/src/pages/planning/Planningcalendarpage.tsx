@@ -50,12 +50,7 @@ const STATUTS_UPDATE = ['PLANIFIE', 'EN_COURS', 'REALISE', 'ANNULE'];
 const currentYear = new Date().getFullYear();
 const ANNEES = [currentYear - 1, currentYear, currentYear + 1];
 
-// Groupes de domaines pour affichage par ligne
-const DOMAINE_GROUPS = [
-  ['Plant', 'Magasin', 'Sanitaires', 'Cantine'],
-  ['Chimique', 'Locaux_techniques', 'Déchets'],
-  ['Transport', 'Infirmerie', 'Recycleurs', 'Incendie'],
-];
+
 
 export default function PlanningCalendarPage() {
   const navigate = useNavigate();

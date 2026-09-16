@@ -50,7 +50,19 @@ export default function HseeChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
-
+  // Dans HseeChat.tsx — useEffect health check
+  useEffect(() => {
+    ragService
+      .health()
+      .then((r) => {
+        console.log("RAG health:", r); // ← voir dans F12 Console
+        setOnline(r.online);
+      })
+      .catch((err) => {
+        console.error("RAG health error:", err);
+        setOnline(false);
+      });
+  }, []);
   const send = async (question?: string) => {
     const q = (question ?? input).trim();
     if (!q || loading) return;
@@ -85,7 +97,7 @@ export default function HseeChat() {
   };
 
   const handleReset = async () => {
-    await ragService.resetHistory();
+    await ragService.reset();
     setMsgs([
       {
         role: "bot",

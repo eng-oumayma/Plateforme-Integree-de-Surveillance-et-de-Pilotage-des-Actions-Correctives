@@ -1,38 +1,51 @@
 // src/services/ragService.ts
 import axios from "axios";
 
-// URL ngrok de Colab — mettre à jour chaque session
-const COLAB_URL =
-  localStorage.getItem("COLAB_RAG_URL") ||
-  "https://handstand-attic-variably.ngrok-free.dev";
+// ← URL ngrok de Colab directement (pas via NestJS)
+const COLAB_URL = "https://handstand-attic-variably.ngrok-free.dev";
 
-const ragApi = axios.create({ baseURL: COLAB_URL, timeout: 60000 });
+const ragApi = axios.create({
+  baseURL: COLAB_URL,
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true", // ← obligatoire
+  },
+  timeout: 180000, // 3 minutes pour le LLM
+});
 
 export const ragService = {
-  setColabUrl: (url: string) => {
-    localStorage.setItem("COLAB_RAG_URL", url);
-    ragApi.defaults.baseURL = url;
+  async health(): Promise<{ online: boolean }> {
+    try {
+      const { data } = await ragApi.get("/health");
+      return { online: true, ...data };
+    } catch {
+      return { online: false };
+    }
   },
-  async chat(question: string, useHistory = true) {
+
+  async chat(question: string): Promise<{
+    answer: string;
+    sources: any[];
+    query_rewritten: string;
+    n_docs_retrieved: number;
+  }> {
     const { data } = await ragApi.post("/chat", {
       question,
-      use_history: useHistory,
+      use_history: true,
     });
     return data;
   },
-  async classify(description: string) {
+
+  async classify(description: string): Promise<{
+    criticite: string;
+    confidence: number;
+    probabilities: Record<string, number>;
+  }> {
     const { data } = await ragApi.post("/classify", { description });
     return data;
   },
-  async search(query: string, method = "hybrid") {
-    const { data } = await ragApi.post("/search", { query, top_k: 5, method });
-    return data;
-  },
-  async resetHistory() {
-    await ragApi.post("/chat/reset");
-  },
-  async health() {
-    const { data } = await ragApi.get("/health");
-    return data;
+
+  async reset(): Promise<void> {
+    await ragApi.post("/chat/reset", {});
   },
 };

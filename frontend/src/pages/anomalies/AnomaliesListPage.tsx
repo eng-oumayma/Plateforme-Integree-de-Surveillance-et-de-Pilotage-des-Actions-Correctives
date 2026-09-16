@@ -13,11 +13,8 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Collapse from "@mui/material/Collapse";
-import IconButton from "@mui/material/IconButton";
 import DownloadIcon from "@mui/icons-material/Download";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import TuneIcon from "@mui/icons-material/Tune";
 import { anomalyService } from "../../services/anomalyService";
 import AnomaliesByDomainChart from "../../components/anomalies/AnomaliesByDomainChart";
@@ -371,11 +368,10 @@ export default function AnomaliesListPage() {
             overflow: "hidden",
           }}
         >
-          {/* Header tableau */}
           <Box
             display="grid"
-            gridTemplateColumns="1.5fr 110px 110px 110px 120px"
-            gap={2}
+            gridTemplateColumns="100px 1fr 100px 110px 120px 90px"
+            gap={1.5}
             sx={{
               px: 2,
               py: 1.5,
@@ -398,12 +394,13 @@ export default function AnomaliesListPage() {
                 fontWeight={600}
                 color="text.secondary"
                 textTransform="uppercase"
+                textAlign="center"
               >
                 {h}
               </Typography>
             ))}
           </Box>
-
+          {/* ── Lignes ── */}
           {anomalies.map((a) => {
             const crit = CRITICALITY_CONFIG[a.criticite];
             const status = STATUS_CONFIG[a.statut];
@@ -411,8 +408,8 @@ export default function AnomaliesListPage() {
               <Box
                 key={a.id}
                 display="grid"
-                gridTemplateColumns="1.5fr 110px 110px 110px 120px"
-                gap={2}
+                gridTemplateColumns="100px 1fr 100px 110px 120px 90px"
+                gap={1.5}
                 alignItems="center"
                 sx={{
                   px: 2,
@@ -423,45 +420,68 @@ export default function AnomaliesListPage() {
                   "&:hover": { bgcolor: "grey.50" },
                 }}
               >
-                {/* Description + date en caption */}
+                {/* Date — centrée */}
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  textAlign="center"
+                >
+                  {new Date(a.createdAt).toLocaleDateString("fr-FR")}
+                </Typography>
+
+                {/* Description — retour à la ligne automatique */}
                 <Box>
                   <Typography
                     variant="body2"
                     sx={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
+                      wordBreak: "break-word", // ← retour à la ligne si long
+                      whiteSpace: "normal",
+                      lineHeight: 1.5,
                     }}
                   >
                     {a.description}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(a.createdAt).toLocaleDateString("fr-FR")}
-                    {a.checklistItem && ` · ${a.checklistItem.libelle}`}
-                  </Typography>
+                  {a.checklistItem && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ wordBreak: "break-word", whiteSpace: "normal" }}
+                    >
+                      → {a.checklistItem.libelle}
+                    </Typography>
+                  )}
                 </Box>
 
-                {/* Domaine */}
-                <Typography variant="body2">{a.domaine || "—"}</Typography>
+                {/* Domaine — centré */}
+                <Typography variant="body2" textAlign="center">
+                  {a.domaine || "—"}
+                </Typography>
 
-                {/* Criticité */}
-                <Chip
-                  label={crit.label}
-                  size="small"
-                  sx={{ bgcolor: crit.bg, color: crit.color, fontWeight: 700 }}
-                />
+                {/* Criticité — centrée */}
+                <Box display="flex" justifyContent="center">
+                  <Chip
+                    label={crit?.label ?? a.criticite}
+                    size="small"
+                    sx={{
+                      bgcolor: crit?.bg,
+                      color: crit?.color,
+                      fontWeight: 700,
+                    }}
+                  />
+                </Box>
 
-                {/* Statut */}
-                <Chip
-                  label={status.label}
-                  size="small"
-                  color={status.color}
-                  variant="outlined"
-                />
+                {/* Statut — centré */}
+                <Box display="flex" justifyContent="center">
+                  <Chip
+                    label={status?.label ?? a.statut}
+                    size="small"
+                    color={status?.color}
+                    variant="outlined"
+                  />
+                </Box>
 
-                {/* Actions */}
-                <Box display="flex" gap={0.5}>
+                {/* Actions — centré */}
+                <Box display="flex" justifyContent="center">
                   <Button
                     size="small"
                     variant="outlined"

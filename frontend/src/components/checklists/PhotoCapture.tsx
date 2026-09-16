@@ -5,7 +5,6 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
-import Tooltip from "@mui/material/Tooltip";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { checklistResponseService } from "../../services/checklistResponseService";
