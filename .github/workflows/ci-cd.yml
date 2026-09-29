@@ -1,4 +1,3 @@
-#ci-cd.yml
 name: LEONI HSEE CI/CD
 
 on:
@@ -113,11 +112,13 @@ jobs:
   # ============================================================
   BUILD_AND_PUBLISH:
     runs-on: ubuntu-latest
+
     needs:
       - Build
       - Testing
       - Security_Scan
 
+    # Currently deploying from develop-clean
     if: github.ref == 'refs/heads/develop-clean'
 
     steps:
@@ -138,48 +139,62 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # ---------------- BACKEND IMAGE ----------------
+      # ========================================================
+      # BACKEND
+      # ========================================================
       - name: Build Backend Docker Image
         run: |
           docker build \
-            -t ${{ steps.login-ecr.outputs.registry }}/leoni-backend:${{ github.sha }} \
-            -t ${{ steps.login-ecr.outputs.registry }}/leoni-backend:latest \
+            -t ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:${{ github.sha }} \
+            -t ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:latest \
             ./backend
 
       - name: Push Backend Docker Image
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/leoni-backend:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/leoni-backend:latest
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:${{ github.sha }}
 
-      # ---------------- FRONTEND IMAGE ----------------
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:latest
+
+      # ========================================================
+      # FRONTEND
+      # ========================================================
       - name: Build Frontend Docker Image
         run: |
           docker build \
-            -t ${{ steps.login-ecr.outputs.registry }}/leoni-frontend:${{ github.sha }} \
-            -t ${{ steps.login-ecr.outputs.registry }}/leoni-frontend:latest \
+            -t ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:${{ github.sha }} \
+            -t ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:latest \
             ./frontend
 
       - name: Push Frontend Docker Image
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/leoni-frontend:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/leoni-frontend:latest
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:${{ github.sha }}
+
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:latest
 
   # ============================================================
   # 5. DEPLOY TO EC2
   # ============================================================
   Deploy:
     runs-on: ubuntu-latest
+
     needs: BUILD_AND_PUBLISH
 
+    # Currently deploying from develop-clean
     if: github.ref == 'refs/heads/develop-clean'
 
     steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
+
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+
           script: |
             set -e
 
@@ -201,12 +216,12 @@ jobs:
             echo "Pulling latest backend image..."
 
             docker pull \
-              ${{ secrets.ECR_REGISTRY }}/leoni-backend:latest
+              ${{ secrets.ECR_REGISTRY }}/leoni-hsee-backend:latest
 
             echo "Pulling latest frontend image..."
 
             docker pull \
-              ${{ secrets.ECR_REGISTRY }}/leoni-frontend:latest
+              ${{ secrets.ECR_REGISTRY }}/leoni-hsee-frontend:latest
 
             echo "Starting PostgreSQL..."
 
