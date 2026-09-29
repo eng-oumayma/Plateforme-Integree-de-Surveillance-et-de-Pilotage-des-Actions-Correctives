@@ -102,27 +102,27 @@ jobs:
   # Job 3 : Security Scan
   # =====================================================
   Security_Scan:
-    runs-on: ubuntu-latest
-    needs: Build
+  runs-on: ubuntu-latest
+  needs: Build
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Trivy Security Scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: json
-          exit-code: 0
-          output: trivy-results.json
+    - name: Trivy Security Scan
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        scan-type: fs
+        scan-ref: .
+        format: json
+        exit-code: 0
+        output: trivy-results.json
 
-      - name: Upload Trivy Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-results
-          path: trivy-results.json
+    - name: Upload Trivy Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-results
+        path: trivy-results.json
 
   # =====================================================
   # Job 4 : Build Docker + Push ECR
