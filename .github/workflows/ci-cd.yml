@@ -117,7 +117,7 @@ jobs:
       - Testing
       - Security_Scan
 
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/develop-clean'
 
     steps:
       - name: Checkout
@@ -169,7 +169,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: BUILD_AND_PUBLISH
 
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/develop-clean'
 
     steps:
       - name: Deploy to EC2
