@@ -1,5 +1,12 @@
-#ci-cd.yml
+# ============================================================
+# LEONI HSEE CI/CD
+# ============================================================
+
 name: LEONI HSEE CI/CD
+
+# ============================================================
+# TRIGGERS
+# ============================================================
 
 on:
   push:
@@ -13,23 +20,38 @@ on:
       - main
 
 # ============================================================
-# BUILD
+# JOBS
 # ============================================================
 
 jobs:
+  # ============================================================
+  # BUILD
+  # ============================================================
+
   Build:
     runs-on: ubuntu-latest
 
     steps:
+      # --------------------------------------------------------
+      # CHECKOUT
+      # --------------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --------------------------------------------------------
+      # NODE.JS
+      # --------------------------------------------------------
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
+
         with:
           node-version: 20
 
-      # ---------------- BACKEND ----------------
+      # --------------------------------------------------------
+      # BACKEND
+      # --------------------------------------------------------
 
       - name: Install Backend Dependencies
         working-directory: backend
@@ -41,11 +63,14 @@ jobs:
 
       - name: Upload Backend Artifact
         uses: actions/upload-artifact@v4
+
         with:
           name: backend-build
           path: backend/dist
 
-      # ---------------- FRONTEND ----------------
+      # --------------------------------------------------------
+      # FRONTEND
+      # --------------------------------------------------------
 
       - name: Install Frontend Dependencies
         working-directory: frontend
@@ -57,6 +82,7 @@ jobs:
 
       - name: Upload Frontend Artifact
         uses: actions/upload-artifact@v4
+
         with:
           name: frontend-build
           path: frontend/dist
@@ -72,17 +98,34 @@ jobs:
       - Build
 
     steps:
+      # --------------------------------------------------------
+      # CHECKOUT
+      # --------------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --------------------------------------------------------
+      # NODE.JS
+      # --------------------------------------------------------
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
+
         with:
           node-version: 20
+
+      # --------------------------------------------------------
+      # BACKEND DEPENDENCIES
+      # --------------------------------------------------------
 
       - name: Install Backend Dependencies
         working-directory: backend
         run: npm ci
+
+      # --------------------------------------------------------
+      # TESTS
+      # --------------------------------------------------------
 
       - name: Run Backend Tests
         working-directory: backend
@@ -99,8 +142,16 @@ jobs:
       - Build
 
     steps:
+      # --------------------------------------------------------
+      # CHECKOUT
+      # --------------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
+
+      # --------------------------------------------------------
+      # TRIVY
+      # --------------------------------------------------------
 
       - name: Trivy Security Scan
         uses: aquasecurity/trivy-action@v0.36.0
@@ -112,6 +163,10 @@ jobs:
           exit-code: 0
           output: trivy-results.json
 
+      # --------------------------------------------------------
+      # UPLOAD TRIVY RESULT
+      # --------------------------------------------------------
+
       - name: Upload Trivy Results
         uses: actions/upload-artifact@v4
 
@@ -120,7 +175,7 @@ jobs:
           path: trivy-results.json
 
   # ============================================================
-  # BUILD DOCKER + PUSH ECR
+  # BUILD DOCKER + PUSH TO ECR
   # ============================================================
 
   BUILD_AND_PUBLISH:
@@ -134,34 +189,47 @@ jobs:
     if: github.ref == 'refs/heads/develop-clean'
 
     steps:
+      # --------------------------------------------------------
+      # CHECKOUT
+      # --------------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---------------- AWS ----------------
+      # --------------------------------------------------------
+      # AWS CREDENTIALS
+      # --------------------------------------------------------
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
 
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ---------------- AWS TEST ----------------
+      # --------------------------------------------------------
+      # CHECK AWS IDENTITY
+      # --------------------------------------------------------
 
       - name: Check AWS Identity
         run: |
           aws sts get-caller-identity
 
-      # ---------------- ECR LOGIN ----------------
+      # --------------------------------------------------------
+      # LOGIN TO ECR
+      # --------------------------------------------------------
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       # ========================================================
-      # BACKEND DOCKER
+      # BACKEND DOCKER IMAGE
       # ========================================================
 
       - name: Build Backend Docker Image
@@ -173,6 +241,7 @@ jobs:
 
       - name: Push Backend Docker Image
         run: |
+
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:${{ github.sha }}
 
@@ -180,7 +249,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:latest
 
       # ========================================================
-      # FRONTEND DOCKER
+      # FRONTEND DOCKER IMAGE
       # ========================================================
 
       - name: Build Frontend Docker Image
@@ -192,6 +261,7 @@ jobs:
 
       - name: Push Frontend Docker Image
         run: |
+
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:${{ github.sha }}
 
@@ -199,7 +269,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:latest
 
   # ============================================================
-  # DEPLOY EC2
+  # DEPLOY TO EC2
   # ============================================================
 
   Deploy:
@@ -211,6 +281,35 @@ jobs:
     if: github.ref == 'refs/heads/develop-clean'
 
     steps:
+      # ========================================================
+      # CHECKOUT
+      # ========================================================
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ========================================================
+      # COPY DOCKER COMPOSE TO EC2
+      # ========================================================
+
+      - name: Copy Docker Compose to EC2
+        uses: appleboy/scp-action@v0.1.7
+
+        with:
+          host: ${{ secrets.EC2_HOST }}
+
+          username: ec2-user
+
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          source: "docker-compose.prod.yml"
+
+          target: "/home/ec2-user/leoni-hsee/"
+
+      # ========================================================
+      # DEPLOY TO EC2
+      # ========================================================
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
 
@@ -226,13 +325,25 @@ jobs:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
 
         with:
+          # ----------------------------------------------------
+          # SSH
+          # ----------------------------------------------------
+
           host: ${{ secrets.EC2_HOST }}
 
           username: ec2-user
 
           key: ${{ secrets.EC2_SSH_KEY }}
 
+          # ----------------------------------------------------
+          # PASS AWS VARIABLES TO EC2
+          # ----------------------------------------------------
+
           envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_REGION,ECR_REGISTRY
+
+          # ----------------------------------------------------
+          # REMOTE SCRIPT
+          # ----------------------------------------------------
 
           script: |
 
@@ -248,6 +359,7 @@ jobs:
             # CHECK AWS CREDENTIALS
             # ==================================================
 
+            echo ""
             echo "Checking AWS credentials..."
 
             aws sts get-caller-identity
@@ -257,6 +369,7 @@ jobs:
             # CHECK DOCKER
             # ==================================================
 
+            echo ""
             echo "Checking Docker..."
 
             docker --version
@@ -266,15 +379,39 @@ jobs:
             # CHECK AWS REGION
             # ==================================================
 
+            echo ""
             echo "AWS Region: $AWS_REGION"
 
             echo "ECR Registry: $ECR_REGISTRY"
 
 
             # ==================================================
-            # ECR LOGIN
+            # APPLICATION DIRECTORY
             # ==================================================
 
+            echo ""
+            echo "Application directory..."
+
+            cd /home/ec2-user/leoni-hsee
+
+            pwd
+
+
+            # ==================================================
+            # CHECK DOCKER COMPOSE FILE
+            # ==================================================
+
+            echo ""
+            echo "Checking docker-compose.prod.yml..."
+
+            ls -lh docker-compose.prod.yml
+
+
+            # ==================================================
+            # LOGIN TO AMAZON ECR
+            # ==================================================
+
+            echo ""
             echo "Logging into Amazon ECR..."
 
             aws ecr get-login-password \
@@ -284,20 +421,15 @@ jobs:
               --password-stdin "$ECR_REGISTRY"
 
 
+            echo ""
             echo "ECR login successful!"
 
 
             # ==================================================
-            # APPLICATION DIRECTORY
+            # PULL BACKEND IMAGE
             # ==================================================
 
-            cd /home/ec2-user/leoni-hsee
-
-
-            # ==================================================
-            # PULL BACKEND
-            # ==================================================
-
+            echo ""
             echo "Pulling backend image..."
 
             docker pull \
@@ -305,9 +437,10 @@ jobs:
 
 
             # ==================================================
-            # PULL FRONTEND
+            # PULL FRONTEND IMAGE
             # ==================================================
 
+            echo ""
             echo "Pulling frontend image..."
 
             docker pull \
@@ -315,73 +448,99 @@ jobs:
 
 
             # ==================================================
-            # START POSTGRES
+            # CHECK DOCKER COMPOSE
             # ==================================================
 
-            echo "Starting PostgreSQL..."
+            echo ""
+            echo "Checking Docker Compose..."
 
             if docker compose version >/dev/null 2>&1; then
 
-              docker compose \
-                -f docker-compose.prod.yml \
-                up -d postgres
+              echo "Using Docker Compose plugin"
+
+              COMPOSE_CMD="docker compose"
+
+            elif docker-compose --version >/dev/null 2>&1; then
+
+              echo "Using Docker Compose standalone"
+
+              COMPOSE_CMD="docker-compose"
 
             else
 
-              docker-compose \
-                -f docker-compose.prod.yml \
-                up -d postgres
+              echo "ERROR: Docker Compose is not installed."
+
+              exit 1
 
             fi
+
+
+            # ==================================================
+            # VALIDATE DOCKER COMPOSE
+            # ==================================================
+
+            echo ""
+            echo "Validating docker-compose.prod.yml..."
+
+            $COMPOSE_CMD \
+              -f docker-compose.prod.yml \
+              config
+
+
+            # ==================================================
+            # START POSTGRESQL
+            # ==================================================
+
+            echo ""
+            echo "Starting PostgreSQL..."
+
+            $COMPOSE_CMD \
+              -f docker-compose.prod.yml \
+              up -d postgres
 
 
             # ==================================================
             # START BACKEND + FRONTEND
-            # ==================================================
+            # ============================================================
 
+            echo ""
             echo "Starting backend and frontend..."
 
-            if docker compose version >/dev/null 2>&1; then
+            $COMPOSE_CMD \
+              -f docker-compose.prod.yml \
+              up -d \
+              --no-deps \
+              --force-recreate \
+              backend frontend
 
-              docker compose \
-                -f docker-compose.prod.yml \
-                up -d \
-                --no-deps \
-                --force-recreate \
-                backend frontend
 
-            else
+            # ==================================================
+            # SHOW CONTAINERS
+            # ==================================================
 
-              docker-compose \
-                -f docker-compose.prod.yml \
-                up -d \
-                --no-deps \
-                --force-recreate \
-                backend frontend
+            echo ""
+            echo "================================="
+            echo "RUNNING CONTAINERS"
+            echo "================================="
 
-            fi
+            docker ps
 
 
             # ==================================================
             # CLEAN OLD IMAGES
             # ==================================================
 
+            echo ""
             echo "Cleaning unused Docker images..."
 
             docker image prune -af
 
 
             # ==================================================
-            # SHOW STATUS
+            # FINAL STATUS
             # ==================================================
 
+            echo ""
             echo "================================="
-            echo "CONTAINERS"
-            echo "================================="
-
-            docker ps
-
-
-            echo "================================="
-            echo "DEPLOYMENT COMPLETED"
+            echo "LEONI HSEE DEPLOYMENT COMPLETED"
             echo "================================="
