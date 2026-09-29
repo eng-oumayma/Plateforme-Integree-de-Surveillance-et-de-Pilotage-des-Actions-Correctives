@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${ECR_REGISTRY}/leoni-hsee-backend:${IMAGE_TAG}
+    image: ${ECR_REGISTRY}/leoni-hsee-backend:latest
     container_name: hsee-backend
     ports: ["3000:3000"]
     environment:
@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${ECR_REGISTRY}/leoni-hsee-frontend:${IMAGE_TAG}
+    image: ${ECR_REGISTRY}/leoni-hsee-frontend:latest
     container_name: hsee-frontend
     ports: ["80:80"]
     depends_on: [backend]
