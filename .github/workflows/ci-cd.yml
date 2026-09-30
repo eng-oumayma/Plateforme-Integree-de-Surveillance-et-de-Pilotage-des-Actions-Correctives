@@ -32,26 +32,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # CHECKOUT
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # NODE.JS
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-
         with:
           node-version: 20
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # BACKEND
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Install Backend Dependencies
         working-directory: backend
@@ -63,14 +62,13 @@ jobs:
 
       - name: Upload Backend Artifact
         uses: actions/upload-artifact@v4
-
         with:
           name: backend-build
           path: backend/dist
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # FRONTEND
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Install Frontend Dependencies
         working-directory: frontend
@@ -82,7 +80,6 @@ jobs:
 
       - name: Upload Frontend Artifact
         uses: actions/upload-artifact@v4
-
         with:
           name: frontend-build
           path: frontend/dist
@@ -98,34 +95,33 @@ jobs:
       - Build
 
     steps:
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # CHECKOUT
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # NODE.JS
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-
         with:
           node-version: 20
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # BACKEND DEPENDENCIES
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Install Backend Dependencies
         working-directory: backend
         run: npm ci
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # TESTS
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Run Backend Tests
         working-directory: backend
@@ -142,20 +138,19 @@ jobs:
       - Build
 
     steps:
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # CHECKOUT
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # TRIVY
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Trivy Security Scan
         uses: aquasecurity/trivy-action@v0.36.0
-
         with:
           scan-type: fs
           scan-ref: .
@@ -163,13 +158,12 @@ jobs:
           exit-code: 0
           output: trivy-results.json
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # UPLOAD TRIVY RESULT
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Upload Trivy Results
         uses: actions/upload-artifact@v4
-
         with:
           name: trivy-results
           path: trivy-results.json
@@ -189,48 +183,44 @@ jobs:
     if: github.ref == 'refs/heads/develop-clean'
 
     steps:
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # CHECKOUT
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # AWS CREDENTIALS
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
-
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # CHECK AWS IDENTITY
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Check AWS Identity
         run: |
           aws sts get-caller-identity
 
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
       # LOGIN TO ECR
-      # --------------------------------------------------------
+      # ----------------------------------------------------------
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # ========================================================
+      # ==========================================================
       # BACKEND DOCKER IMAGE
-      # ========================================================
+      # ==========================================================
 
       - name: Build Backend Docker Image
         run: |
@@ -241,16 +231,15 @@ jobs:
 
       - name: Push Backend Docker Image
         run: |
-
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:${{ github.sha }}
 
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-backend:latest
 
-      # ========================================================
+      # ==========================================================
       # FRONTEND DOCKER IMAGE
-      # ========================================================
+      # ==========================================================
 
       - name: Build Frontend Docker Image
         run: |
@@ -261,7 +250,6 @@ jobs:
 
       - name: Push Frontend Docker Image
         run: |
-
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/leoni-hsee-frontend:${{ github.sha }}
 
@@ -281,83 +269,93 @@ jobs:
     if: github.ref == 'refs/heads/develop-clean'
 
     steps:
-      # ========================================================
+      # ==========================================================
       # CHECKOUT
-      # ========================================================
+      # ==========================================================
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ========================================================
+      # ==========================================================
       # COPY DOCKER COMPOSE TO EC2
-      # ========================================================
+      # ==========================================================
 
       - name: Copy Docker Compose to EC2
         uses: appleboy/scp-action@v0.1.7
-
         with:
           host: ${{ secrets.EC2_HOST }}
-
           username: ec2-user
-
           key: ${{ secrets.EC2_SSH_KEY }}
-
           source: "docker-compose.prod.yml"
-
           target: "/home/ec2-user/leoni-hsee/"
 
-      # ========================================================
+      # ==========================================================
       # DEPLOY TO EC2
-      # ========================================================
+      # ==========================================================
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
 
         env:
+          # ------------------------------------------------------
+          # AWS CREDENTIALS
+          # ------------------------------------------------------
+
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-
           AWS_REGION: ${{ secrets.AWS_REGION }}
+
+          # ------------------------------------------------------
+          # ECR
+          # ------------------------------------------------------
 
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
 
+          # ------------------------------------------------------
+          # APPLICATION SECRETS
+          # ------------------------------------------------------
+
+          DB_PASS: ${{ secrets.DB_PASS }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+          # ------------------------------------------------------
+          # IMAGE TAG
+          # ------------------------------------------------------
+
+          IMAGE_TAG: latest
+
         with:
-          # ----------------------------------------------------
+          # ------------------------------------------------------
           # SSH
-          # ----------------------------------------------------
+          # ------------------------------------------------------
 
           host: ${{ secrets.EC2_HOST }}
-
           username: ec2-user
-
           key: ${{ secrets.EC2_SSH_KEY }}
 
-          # ----------------------------------------------------
-          # PASS AWS VARIABLES TO EC2
-          # ----------------------------------------------------
+          # ------------------------------------------------------
+          # PASS VARIABLES TO EC2
+          # ------------------------------------------------------
 
-          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_REGION,ECR_REGISTRY
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_REGION,ECR_REGISTRY,DB_PASS,JWT_SECRET,IMAGE_TAG
 
-          # ----------------------------------------------------
+          # ------------------------------------------------------
           # REMOTE SCRIPT
-          # ----------------------------------------------------
+          # ------------------------------------------------------
 
           script: |
 
             set -e
 
+            echo "============================================"
+            echo "       LEONI HSEE DEPLOYMENT"
+            echo "============================================"
 
-            echo "================================="
-            echo "LEONI HSEE DEPLOYMENT"
-            echo "================================="
 
-
-            # ==================================================
+            # ====================================================
             # CHECK AWS CREDENTIALS
-            # ==================================================
+            # ====================================================
 
             echo ""
             echo "Checking AWS credentials..."
@@ -365,9 +363,9 @@ jobs:
             aws sts get-caller-identity
 
 
-            # ==================================================
+            # ====================================================
             # CHECK DOCKER
-            # ==================================================
+            # ====================================================
 
             echo ""
             echo "Checking Docker..."
@@ -375,81 +373,9 @@ jobs:
             docker --version
 
 
-            # ==================================================
-            # CHECK AWS REGION
-            # ==================================================
-
-            echo ""
-            echo "AWS Region: $AWS_REGION"
-
-            echo "ECR Registry: $ECR_REGISTRY"
-
-
-            # ==================================================
-            # APPLICATION DIRECTORY
-            # ==================================================
-
-            echo ""
-            echo "Application directory..."
-
-            cd /home/ec2-user/leoni-hsee
-
-            pwd
-
-
-            # ==================================================
-            # CHECK DOCKER COMPOSE FILE
-            # ==================================================
-
-            echo ""
-            echo "Checking docker-compose.prod.yml..."
-
-            ls -lh docker-compose.prod.yml
-
-
-            # ==================================================
-            # LOGIN TO AMAZON ECR
-            # ==================================================
-
-            echo ""
-            echo "Logging into Amazon ECR..."
-
-            aws ecr get-login-password \
-              --region "$AWS_REGION" | \
-              docker login \
-              --username AWS \
-              --password-stdin "$ECR_REGISTRY"
-
-
-            echo ""
-            echo "ECR login successful!"
-
-
-            # ==================================================
-            # PULL BACKEND IMAGE
-            # ==================================================
-
-            echo ""
-            echo "Pulling backend image..."
-
-            docker pull \
-              "$ECR_REGISTRY/leoni-hsee-backend:latest"
-
-
-            # ==================================================
-            # PULL FRONTEND IMAGE
-            # ==================================================
-
-            echo ""
-            echo "Pulling frontend image..."
-
-            docker pull \
-              "$ECR_REGISTRY/leoni-hsee-frontend:latest"
-
-
-            # ==================================================
+            # ====================================================
             # CHECK DOCKER COMPOSE
-            # ==================================================
+            # ====================================================
 
             echo ""
             echo "Checking Docker Compose..."
@@ -475,9 +401,125 @@ jobs:
             fi
 
 
-            # ==================================================
+            # ====================================================
+            # CHECK ENVIRONMENT VARIABLES
+            # ====================================================
+
+            echo ""
+            echo "Checking deployment variables..."
+
+            echo "AWS Region: $AWS_REGION"
+            echo "ECR Registry: $ECR_REGISTRY"
+            echo "Image Tag: $IMAGE_TAG"
+
+            echo "DB_PASS length: ${#DB_PASS}"
+            echo "JWT_SECRET length: ${#JWT_SECRET}"
+
+
+            # ====================================================
+            # VERIFY REQUIRED VARIABLES
+            # ====================================================
+
+            if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+              echo "ERROR: AWS_ACCESS_KEY_ID is empty."
+              exit 1
+            fi
+
+            if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+              echo "ERROR: AWS_SECRET_ACCESS_KEY is empty."
+              exit 1
+            fi
+
+            if [ -z "$AWS_SESSION_TOKEN" ]; then
+              echo "ERROR: AWS_SESSION_TOKEN is empty."
+              exit 1
+            fi
+
+            if [ -z "$AWS_REGION" ]; then
+              echo "ERROR: AWS_REGION is empty."
+              exit 1
+            fi
+
+            if [ -z "$ECR_REGISTRY" ]; then
+              echo "ERROR: ECR_REGISTRY is empty."
+              exit 1
+            fi
+
+            if [ -z "$DB_PASS" ]; then
+              echo "ERROR: DB_PASS is empty."
+              exit 1
+            fi
+
+            if [ -z "$JWT_SECRET" ]; then
+              echo "ERROR: JWT_SECRET is empty."
+              exit 1
+            fi
+
+
+            # ====================================================
+            # APPLICATION DIRECTORY
+            # ====================================================
+
+            echo ""
+            echo "Application directory..."
+
+            cd /home/ec2-user/leoni-hsee
+
+            pwd
+
+
+            # ====================================================
+            # CHECK DOCKER COMPOSE FILE
+            # ====================================================
+
+            echo ""
+            echo "Checking docker-compose.prod.yml..."
+
+            ls -lh docker-compose.prod.yml
+
+
+            # ====================================================
+            # LOGIN TO AMAZON ECR
+            # ====================================================
+
+            echo ""
+            echo "Logging into Amazon ECR..."
+
+            aws ecr get-login-password \
+              --region "$AWS_REGION" \
+              | docker login \
+              --username AWS \
+              --password-stdin "$ECR_REGISTRY"
+
+            echo ""
+            echo "ECR login successful!"
+
+
+            # ====================================================
+            # PULL BACKEND IMAGE
+            # ====================================================
+
+            echo ""
+            echo "Pulling backend image..."
+
+            docker pull \
+              "$ECR_REGISTRY/leoni-hsee-backend:latest"
+
+
+            # ====================================================
+            # PULL FRONTEND IMAGE
+            # ====================================================
+
+            echo ""
+            echo "Pulling frontend image..."
+
+            docker pull \
+              "$ECR_REGISTRY/leoni-hsee-frontend:latest"
+
+
+            # ====================================================
             # VALIDATE DOCKER COMPOSE
-            # ==================================================
+            # ====================================================
 
             echo ""
             echo "Validating docker-compose.prod.yml..."
@@ -487,48 +529,141 @@ jobs:
               config
 
 
-            # ==================================================
-            # START POSTGRESQL
-            # ==================================================
+            # ====================================================
+            # START / RECREATE POSTGRESQL
+            # ====================================================
 
             echo ""
             echo "Starting PostgreSQL..."
 
             $COMPOSE_CMD \
               -f docker-compose.prod.yml \
-              up -d postgres
+              up -d \
+              --force-recreate \
+              postgres
 
 
-            # ==================================================
-            # START BACKEND + FRONTEND
-            # ============================================================
+            # ====================================================
+            # WAIT FOR POSTGRESQL
+            # ====================================================
 
             echo ""
-            echo "Starting backend and frontend..."
+            echo "Waiting for PostgreSQL..."
+
+            for i in {1..30}; do
+
+              STATUS=$(docker inspect \
+                --format='{{.State.Health.Status}}' \
+                postgres-db 2>/dev/null || echo "starting")
+
+              echo "PostgreSQL status: $STATUS"
+
+              if [ "$STATUS" = "healthy" ]; then
+                echo "PostgreSQL is healthy!"
+                break
+              fi
+
+              if [ "$STATUS" = "unhealthy" ]; then
+                echo "ERROR: PostgreSQL is unhealthy."
+
+                docker logs postgres-db --tail 50
+
+                exit 1
+              fi
+
+              sleep 2
+
+            done
+
+
+            # ====================================================
+            # FINAL POSTGRESQL CHECK
+            # ====================================================
+
+            STATUS=$(docker inspect \
+              --format='{{.State.Health.Status}}' \
+              postgres-db 2>/dev/null || echo "unknown")
+
+            if [ "$STATUS" != "healthy" ]; then
+
+              echo "ERROR: PostgreSQL did not become healthy."
+
+              docker logs postgres-db --tail 100
+
+              exit 1
+
+            fi
+
+
+            # ====================================================
+            # START / RECREATE BACKEND
+            # ====================================================
+
+            echo ""
+            echo "Starting backend..."
 
             $COMPOSE_CMD \
               -f docker-compose.prod.yml \
               up -d \
               --no-deps \
               --force-recreate \
-              backend frontend
+              backend
 
 
-            # ==================================================
-            # SHOW CONTAINERS
-            # ==================================================
+            # ====================================================
+            # START / RECREATE FRONTEND
+            # ====================================================
 
             echo ""
-            echo "================================="
-            echo "RUNNING CONTAINERS"
-            echo "================================="
+            echo "Starting frontend..."
 
-            docker ps
+            $COMPOSE_CMD \
+              -f docker-compose.prod.yml \
+              up -d \
+              --no-deps \
+              --force-recreate \
+              frontend
 
 
-            # ==================================================
-            # CLEAN OLD IMAGES
-            # ==================================================
+            # ====================================================
+            # SHOW CONTAINERS
+            # ====================================================
+
+            echo ""
+            echo "============================================"
+            echo "          RUNNING CONTAINERS"
+            echo "============================================"
+
+            docker ps -a
+
+
+            # ====================================================
+            # SHOW POSTGRESQL LOGS
+            # ====================================================
+
+            echo ""
+            echo "============================================"
+            echo "        POSTGRESQL LAST LOGS"
+            echo "============================================"
+
+            docker logs postgres-db --tail 30
+
+
+            # ====================================================
+            # SHOW BACKEND LOGS
+            # ====================================================
+
+            echo ""
+            echo "============================================"
+            echo "          BACKEND LAST LOGS"
+            echo "============================================"
+
+            docker logs hsee-backend --tail 30
+
+
+            # ====================================================
+            # CLEAN UNUSED IMAGES
+            # ====================================================
 
             echo ""
             echo "Cleaning unused Docker images..."
@@ -536,11 +671,11 @@ jobs:
             docker image prune -af
 
 
-            # ==================================================
+            # ====================================================
             # FINAL STATUS
-            # ==================================================
+            # ====================================================
 
             echo ""
-            echo "================================="
-            echo "LEONI HSEE DEPLOYMENT COMPLETED"
-            echo "================================="
+            echo "============================================"
+            echo "   LEONI HSEE DEPLOYMENT COMPLETED"
+            echo "============================================"
