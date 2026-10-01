@@ -300,8 +300,9 @@ Pilote       : pilote@leoni.tn   / Pilot123!
 
 ---
 
-📁 Structure du projet
+## 📁 Structure du projet
 
+```
 leoni-hsee/
 ├── .github/
 │   └── workflows/
@@ -487,7 +488,7 @@ leoni-hsee/
 ├── docker-compose.yml                   # Développement local
 ├── docker-compose.prod.yml              # Production EC2
 └── .gitignore
-
+```
 -----
 ## 🔐 Authentification et rôles
 
@@ -634,8 +635,8 @@ VITE_API_URL=https://hsee.leoni.tn/api
 Étudiant en 3 éme année cycle d'ingénieur en informatique — Stagiaire IT-Hub chez LEONI Tunisie
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/elhaj-mohamed-oumayma-3b6198247/?isSelfProfile=true)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/votre-username)
-[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:votre@email.com)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/eng-oumayma)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:oumaymahadjmohamed@email.com)
 
 ---
 
