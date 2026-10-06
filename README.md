@@ -630,7 +630,7 @@ VITE_API_URL=https://hsee.leoni.tn/api
 
 ## 👨‍💻 Auteur
 
-** Oumayma Elhaj mohamed et Ben Tiba Roua**
+**Oumayma Elhaj mohamed et Ben Tiba Roua**
 
 Étudiantes en 3 éme année cycle d'ingénieur en informatique — Stagiaire IT-Hub chez LEONI Tunisie
 
